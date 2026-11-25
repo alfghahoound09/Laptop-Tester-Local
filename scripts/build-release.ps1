@@ -31,7 +31,6 @@ try {
 }
 catch { }
 $builtAtUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-$sourceRevProps = if (-not [string]::IsNullOrWhiteSpace($commitSha)) { @("-p:SourceRevisionId=$commitSha") } else { @() }
 
 $publishRoot = Join-Path $repoRoot 'publish'
 $portableDir = Join-Path $publishRoot "$Runtime-portable"
@@ -50,20 +49,25 @@ if (-not $SkipTests) {
 
 # 1. Portable single-file self-contained .exe
 Write-Host "Publishing portable single-file executable..."
-dotnet publish $appProj `
-    -c Release `
-    -r $Runtime `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:EnableCompressionInSingleFile=true `
-    -p:DebugType=none `
-    -p:DebugSymbols=false `
-    -p:Version=$Version `
-    -p:AssemblyVersion=$assemblyVer `
-    -p:FileVersion=$assemblyVer `
-    @sourceRevProps `
-    -o $portableDir
+$portableArgs = @(
+    'publish', $appProj,
+    '-c', 'Release',
+    '-r', $Runtime,
+    '--self-contained', 'true',
+    '-p:PublishSingleFile=true',
+    '-p:IncludeNativeLibrariesForSelfExtract=true',
+    '-p:EnableCompressionInSingleFile=true',
+    '-p:DebugType=none',
+    '-p:DebugSymbols=false',
+    "-p:Version=$Version",
+    "-p:AssemblyVersion=$assemblyVer",
+    "-p:FileVersion=$assemblyVer",
+    '-o', $portableDir
+)
+if (-not [string]::IsNullOrWhiteSpace($commitSha)) {
+    $portableArgs += "-p:SourceRevisionId=$commitSha"
+}
+& dotnet @portableArgs
 if ($LASTEXITCODE -ne 0) { throw "Portable publish failed." }
 
 $portableSrc = Join-Path $portableDir 'LaptopTester.exe'
@@ -91,18 +95,23 @@ if (-not $SkipInstaller) {
 
     if ($iscc) {
         Write-Host "Publishing self-contained installer payload..."
-        dotnet publish $appProj `
-            -c Release `
-            -r $Runtime `
-            --self-contained true `
-            -p:PublishSingleFile=false `
-            -p:DebugType=none `
-            -p:DebugSymbols=false `
-            -p:Version=$Version `
-            -p:AssemblyVersion=$assemblyVer `
-            -p:FileVersion=$assemblyVer `
-            @sourceRevProps `
-            -o $installerInputDir
+        $installerArgs = @(
+            'publish', $appProj,
+            '-c', 'Release',
+            '-r', $Runtime,
+            '--self-contained', 'true',
+            '-p:PublishSingleFile=false',
+            '-p:DebugType=none',
+            '-p:DebugSymbols=false',
+            "-p:Version=$Version",
+            "-p:AssemblyVersion=$assemblyVer",
+            "-p:FileVersion=$assemblyVer",
+            '-o', $installerInputDir
+        )
+        if (-not [string]::IsNullOrWhiteSpace($commitSha)) {
+            $installerArgs += "-p:SourceRevisionId=$commitSha"
+        }
+        & dotnet @installerArgs
         if ($LASTEXITCODE -ne 0) { throw "Installer payload publish failed." }
 
         Write-Host "Compiling Windows installer via $iscc..."
@@ -117,27 +126,27 @@ if (-not $SkipInstaller) {
 # 3. Generate SHA256SUMS.txt (with commit SHA & binary SHA-256 metadata headers for same-version hotfix checks)
 $checksumPath = Join-Path $distDir 'SHA256SUMS.txt'
 $artifacts = Get-ChildItem -Path $distDir -Filter '*.exe' | Sort-Object Name
-$headerLines = [System.Collections.Generic.List[string]]::new()
-$headerLines.Add("# version: $Version")
+$allLines = [System.Collections.Generic.List[string]]::new()
+$allLines.Add("# version: $Version")
 if (-not [string]::IsNullOrWhiteSpace($commitSha)) {
-    $headerLines.Add("# commit: $commitSha")
+    $allLines.Add("# commit: $commitSha")
 }
-$headerLines.Add("# built_at: $builtAtUtc")
+$allLines.Add("# built_at: $builtAtUtc")
 
 $installedAppExe = Join-Path $installerInputDir 'LaptopTester.exe'
 if (Test-Path -LiteralPath $installedAppExe) {
     $appHash = (Get-FileHash -Path $installedAppExe -Algorithm SHA256).Hash.ToLowerInvariant()
-    $headerLines.Add("# app_sha256: $appHash")
+    $allLines.Add("# app_sha256: $appHash")
 }
 if (Test-Path -LiteralPath $portableDest) {
     $portHash = (Get-FileHash -Path $portableDest -Algorithm SHA256).Hash.ToLowerInvariant()
-    $headerLines.Add("# portable_sha256: $portHash")
+    $allLines.Add("# portable_sha256: $portHash")
 }
 
-$fileLines = foreach ($file in $artifacts) {
+foreach ($file in $artifacts) {
     $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$hash  $($file.Name)"
+    $allLines.Add("$hash  $($file.Name)")
 }
-Set-Content -Path $checksumPath -Value ($headerLines + $fileLines) -Encoding UTF8
+Set-Content -Path $checksumPath -Value $allLines -Encoding UTF8
 Write-Host "Checksums written to $checksumPath"
 Get-ChildItem -Path $distDir | Select-Object Name, Length
