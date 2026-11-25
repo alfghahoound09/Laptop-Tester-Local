@@ -325,9 +325,39 @@ public partial class QuickTestViewModel : ObservableObject
                 {
                     if (round.StepId == "speaker")
                     {
-                        audioLoopback = EnableAcousticLoopback
-                            ? await _audioService.RunAcousticLoopbackTestAsync()
-                            : BuildDeviceOnlyAudioResult(_audioService.GetAudioDevices());
+                        if (EnableAcousticLoopback)
+                        {
+                            using var audioCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                            try
+                            {
+                                audioLoopback = await _audioService.RunAcousticLoopbackTestAsync(ct: audioCts.Token);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                var devs = await Task.Run(() => _audioService.GetAudioDevices());
+                                audioLoopback = new AcousticLoopbackResult(
+                                    devs.OutputDeviceCount > 0,
+                                    devs.InputDeviceCount > 0,
+                                    0,
+                                    false,
+                                    "Audio loopback timed out — verify sound manually or Open Test");
+                            }
+                            catch (Exception ex)
+                            {
+                                var devs = await Task.Run(() => _audioService.GetAudioDevices());
+                                audioLoopback = new AcousticLoopbackResult(
+                                    devs.OutputDeviceCount > 0,
+                                    devs.InputDeviceCount > 0,
+                                    0,
+                                    false,
+                                    $"Audio probe skipped ({ex.Message}) — confirm sound manually");
+                            }
+                        }
+                        else
+                        {
+                            var devs = await Task.Run(() => _audioService.GetAudioDevices());
+                            audioLoopback = BuildDeviceOnlyAudioResult(devs);
+                        }
 
                         var spkStatus = !audioLoopback.OutputPresent
                             ? TestStatus.Failed
@@ -337,15 +367,15 @@ public partial class QuickTestViewModel : ObservableObject
 
                         string spkMsg = !audioLoopback.OutputPresent
                             ? "No speaker playback device detected"
-                            : audioLoopback.LoopbackDetected
-                                ? audioLoopback.Summary
-                                : "Audio playback device ready — confirm sound or Open Test";
+                            : string.IsNullOrWhiteSpace(audioLoopback.Summary)
+                                ? "Audio playback device ready — confirm sound or Open Test"
+                                : audioLoopback.Summary;
 
                         _store.Upsert("speaker", "Stereo Speakers", "Audio", spkStatus, spkMsg);
                     }
                     else
                     {
-                        audioLoopback ??= BuildDeviceOnlyAudioResult(_audioService.GetAudioDevices());
+                        audioLoopback ??= BuildDeviceOnlyAudioResult(await Task.Run(() => _audioService.GetAudioDevices()));
                         var micStatus = !audioLoopback.InputPresent
                             ? TestStatus.Failed
                             : audioLoopback.LoopbackDetected

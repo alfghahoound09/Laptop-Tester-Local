@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaptopTester.Core.Localization;
@@ -39,6 +40,10 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
     private readonly AudioCameraService _audioService;
     private readonly BatteryService _batteryService;
     private readonly TestResultsStore _store;
+    private readonly EventHandler<string> _usbTopologyHandler;
+    private readonly EventHandler<double> _micLevelHandler;
+    private double _latestMicLevel;
+    private int _micDispatchQueued;
 
     [ObservableProperty] private string _activeSection = "Hub";
 
@@ -105,15 +110,31 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         _store = store;
         _ = loc;
 
-        _usbService.UsbTopologyChanged += (_, msg) =>
-            Application.Current?.Dispatcher.Invoke(() =>
+        _usbTopologyHandler = (_, msg) =>
+        {
+            var disp = Application.Current?.Dispatcher;
+            if (disp is null || disp.HasShutdownStarted || disp.HasShutdownFinished) return;
+            disp.BeginInvoke(DispatcherPriority.Background, () =>
             {
                 UsbWatcherLog = $"{DateTime.Now:HH:mm:ss} — {msg}";
                 _ = ScanUsbAsync();
             });
+        };
+        _usbService.UsbTopologyChanged += _usbTopologyHandler;
 
-        _audioService.MicrophoneLevelMeasured += (_, lvl) =>
-            Application.Current?.Dispatcher.Invoke(() => MicLevelPercent = Math.Round(lvl * 100.0, 1));
+        _micLevelHandler = (_, lvl) =>
+        {
+            Volatile.Write(ref _latestMicLevel, Math.Round(lvl * 100.0, 1));
+            var disp = Application.Current?.Dispatcher;
+            if (disp is null || disp.HasShutdownStarted || disp.HasShutdownFinished) return;
+            if (Interlocked.CompareExchange(ref _micDispatchQueued, 1, 0) != 0) return;
+            disp.BeginInvoke(DispatcherPriority.Background, () =>
+            {
+                Interlocked.Exchange(ref _micDispatchQueued, 0);
+                MicLevelPercent = Volatile.Read(ref _latestMicLevel);
+            });
+        };
+        _audioService.MicrophoneLevelMeasured += _micLevelHandler;
 
         _store.ResultsChanged += (_, _) => SyncStatusesFromStore();
 
@@ -247,31 +268,31 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         AudioSummary = $"Speakers ({dev.OutputDeviceCount}): {dev.PrimaryOutputName}  ·  Mic ({dev.InputDeviceCount}): {dev.PrimaryInputName}";
     }
 
-    [RelayCommand] private void PlayLeftSpeaker() => _audioService.PlayStereoTest(true, false, 440);
-    [RelayCommand] private void PlayRightSpeaker() => _audioService.PlayStereoTest(false, true, 523);
-    [RelayCommand] private void PlayBothSpeakers() => _audioService.PlayStereoTest(true, true, 440);
-    [RelayCommand] private void PlaySweep() => _audioService.PlaySweepTest();
-    [RelayCommand] private void StopAudio() => _audioService.StopPlayback();
+    [RelayCommand] private Task PlayLeftSpeakerAsync() => Task.Run(() => _audioService.PlayStereoTest(true, false, 440));
+    [RelayCommand] private Task PlayRightSpeakerAsync() => Task.Run(() => _audioService.PlayStereoTest(false, true, 523));
+    [RelayCommand] private Task PlayBothSpeakersAsync() => Task.Run(() => _audioService.PlayStereoTest(true, true, 440));
+    [RelayCommand] private Task PlaySweepAsync() => Task.Run(() => _audioService.PlaySweepTest());
+    [RelayCommand] private Task StopAudioAsync() => Task.Run(() => _audioService.StopPlayback());
 
     [RelayCommand]
-    private void ToggleMicRecording()
+    private async Task ToggleMicRecordingAsync()
     {
         if (IsRecordingMic)
         {
-            _audioService.StopMicrophoneRecording();
+            await Task.Run(() => _audioService.StopMicrophoneRecording());
             IsRecordingMic = false;
             MicLevelPercent = 0;
             HasRecordedAudio = _audioService.HasRecordedAudio;
         }
         else
         {
-            IsRecordingMic = _audioService.StartMicrophoneRecording();
+            IsRecordingMic = await Task.Run(() => _audioService.StartMicrophoneRecording());
         }
         RefreshLabels();
     }
 
     [RelayCommand]
-    private void PlayRecordedMic() => _audioService.PlayRecordedMicrophone();
+    private Task PlayRecordedMicAsync() => Task.Run(() => _audioService.PlayRecordedMicrophone());
 
     [RelayCommand]
     public async Task ScanCamerasAsync()
@@ -403,6 +424,8 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _usbService.UsbTopologyChanged -= _usbTopologyHandler;
+        _audioService.MicrophoneLevelMeasured -= _micLevelHandler;
         _usbService.Dispose();
         _audioService.Dispose();
     }

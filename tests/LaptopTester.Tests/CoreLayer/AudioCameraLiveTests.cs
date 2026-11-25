@@ -1,3 +1,4 @@
+using System.Windows.Threading;
 using LaptopTester.Core.Services;
 using Xunit;
 
@@ -60,5 +61,63 @@ public sealed class AudioCameraLiveTests
         svc.PlayRecordedMicrophone(); // empty buffer no-op
         svc.StopPlayback();
         svc.StopPlayback(); // idempotent
+    }
+
+    [SkippableFact]
+    [Trait("Category", "Hardware")]
+    public async Task AcousticLoopback_WithWpfDispatcherAndEventSubscriber_DoesNotDeadlock()
+    {
+        using var svc = new AudioCameraService();
+        var devs = svc.GetAudioDevices();
+        Skip.If(devs.InputDeviceCount == 0 || devs.OutputDeviceCount == 0,
+            "Requires both audio output and input devices.");
+
+        var tcs = new TaskCompletionSource<AcousticLoopbackResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int uiCallbacks = 0;
+
+        var staThread = new Thread(() =>
+        {
+            var dispatcher = Dispatcher.CurrentDispatcher;
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(dispatcher));
+
+            svc.MicrophoneLevelMeasured += (_, _) =>
+            {
+                if (!dispatcher.HasShutdownStarted && !dispatcher.HasShutdownFinished)
+                {
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, () => Interlocked.Increment(ref uiCallbacks));
+                }
+            };
+
+            dispatcher.BeginInvoke(new Action(async () =>
+            {
+                try
+                {
+                    // Runs loopback from a real WPF UI Dispatcher context while async UI callbacks fire.
+                    var result = await svc.RunAcousticLoopbackTestAsync(chimeDurationSec: 0.25);
+                    tcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+                finally
+                {
+                    dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+                }
+            }));
+
+            Dispatcher.Run();
+        });
+        staThread.SetApartmentState(ApartmentState.STA);
+        staThread.IsBackground = true;
+        staThread.Start();
+
+        var completed = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        Assert.True(completed == tcs.Task, "Audio loopback deadlocked the WPF Dispatcher thread.");
+
+        var loopback = await tcs.Task;
+        Assert.True(loopback.OutputPresent);
+        Assert.False(string.IsNullOrWhiteSpace(loopback.Summary));
+        Assert.True(staThread.Join(2000), "WPF STA Dispatcher thread did not exit cleanly.");
     }
 }

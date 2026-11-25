@@ -12,17 +12,29 @@ public sealed record AcousticLoopbackResult(
     bool LoopbackDetected,
     string Summary);
 
-/// <summary>Synthesizes stereo test WAVs, records live microphone PCM via winmm.dll, and enumerates cameras.</summary>
+/// <summary>Synthesizes stereo test WAVs, records live microphone PCM via winmm.dll (CALLBACK_EVENT), and enumerates cameras.</summary>
 public sealed class AudioCameraService : IDisposable
 {
+    private const int CALLBACK_EVENT = 0x00050000;
+    private const uint WHDR_DONE = 0x00000001;
+    private const uint SND_ASYNC = 0x0001;
+    private const uint SND_NODEFAULT = 0x0002;
+    private const uint SND_MEMORY = 0x0004;
+    private const uint SND_PURGE = 0x0040;
+
+    private readonly object _playbackLock = new();
+    private readonly object _waveInLifecycleLock = new();
+    private readonly object _recLock = new();
+    private readonly MemoryStream _recordedPcm = new();
+
     private GCHandle? _playbackHandle;
     private IntPtr _waveInHandle;
     private readonly List<GCHandle> _bufHandles = new();
     private readonly List<IntPtr> _headerPtrs = new();
-    private readonly MemoryStream _recordedPcm = new();
-    private readonly object _recLock = new();
+    private AutoResetEvent? _dataReadyEvent;
+    private ManualResetEvent? _stopEvent;
+    private Thread? _readerThread;
     private volatile bool _isRecording;
-    private WaveInProc? _waveInCallback;
 
     public event EventHandler<double>? MicrophoneLevelMeasured;
 
@@ -42,7 +54,7 @@ public sealed class AudioCameraService : IDisposable
     private static extern int waveInGetDevCaps(IntPtr uDeviceID, out WAVEINCAPS pwic, int cbwic);
 
     [DllImport("winmm.dll")]
-    private static extern int waveInOpen(out IntPtr lphWaveIn, int uDeviceID, ref WAVEFORMATEX lpFormat, WaveInProc dwCallback, IntPtr dwInstance, int dwFlags);
+    private static extern int waveInOpen(out IntPtr lphWaveIn, int uDeviceID, ref WAVEFORMATEX lpFormat, IntPtr dwCallback, IntPtr dwInstance, int dwFlags);
 
     [DllImport("winmm.dll")]
     private static extern int waveInPrepareHeader(IntPtr hWaveIn, IntPtr lpWaveInHdr, int uSize);
@@ -64,8 +76,6 @@ public sealed class AudioCameraService : IDisposable
 
     [DllImport("winmm.dll")]
     private static extern int waveInClose(IntPtr hWaveIn);
-
-    private delegate void WaveInProc(IntPtr hwi, int uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct WAVEOUTCAPS
@@ -123,28 +133,37 @@ public sealed class AudioCameraService : IDisposable
 
     public void PlayStereoTest(bool left, bool right, double freqHz = 440, double durationSec = 1.4)
     {
-        StopPlayback();
         byte[] wav = BuildStereoWave(left, right, freqHz, freqHz, durationSec);
         PlayWaveBytes(wav);
     }
 
     public void PlaySweepTest(double durationSec = 2.5)
     {
-        StopPlayback();
         byte[] wav = BuildStereoWave(true, true, 160, 4000, durationSec);
         PlayWaveBytes(wav);
     }
 
     private void PlayWaveBytes(byte[] wav)
     {
-        _playbackHandle = GCHandle.Alloc(wav, GCHandleType.Pinned);
-        // SND_MEMORY (0x0004) | SND_ASYNC (0x0001)
-        PlaySound(_playbackHandle.Value.AddrOfPinnedObject(), IntPtr.Zero, 0x0005);
+        lock (_playbackLock)
+        {
+            StopPlaybackCore();
+            _playbackHandle = GCHandle.Alloc(wav, GCHandleType.Pinned);
+            PlaySound(_playbackHandle.Value.AddrOfPinnedObject(), IntPtr.Zero, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
+        }
     }
 
     public void StopPlayback()
     {
-        try { PlaySound(IntPtr.Zero, IntPtr.Zero, 0x0040 /* SND_PURGE */); } catch { }
+        lock (_playbackLock)
+        {
+            StopPlaybackCore();
+        }
+    }
+
+    private void StopPlaybackCore()
+    {
+        try { PlaySound(IntPtr.Zero, IntPtr.Zero, SND_PURGE); } catch { }
         if (_playbackHandle is { IsAllocated: true } h)
             h.Free();
         _playbackHandle = null;
@@ -152,62 +171,150 @@ public sealed class AudioCameraService : IDisposable
 
     public bool StartMicrophoneRecording()
     {
-        StopMicrophoneRecording();
-        lock (_recLock) _recordedPcm.SetLength(0);
-
-        var fmt = new WAVEFORMATEX
+        lock (_waveInLifecycleLock)
         {
-            wFormatTag = 1, // PCM
-            nChannels = 1,
-            nSamplesPerSec = 16000,
-            wBitsPerSample = 16,
-            nBlockAlign = 2,
-            nAvgBytesPerSec = 32000,
-            cbSize = 0
-        };
+            StopMicrophoneRecordingCore();
+            lock (_recLock) _recordedPcm.SetLength(0);
 
-        _waveInCallback = OnWaveInData;
-        int rc = waveInOpen(out _waveInHandle, -1 /* WAVE_MAPPER */, ref fmt, _waveInCallback, IntPtr.Zero, 0x00030000 /* CALLBACK_FUNCTION */);
-        if (rc != 0 || _waveInHandle == IntPtr.Zero)
-            return false;
+            var fmt = new WAVEFORMATEX
+            {
+                wFormatTag = 1, // PCM
+                nChannels = 1,
+                nSamplesPerSec = 16000,
+                wBitsPerSample = 16,
+                nBlockAlign = 2,
+                nAvgBytesPerSec = 32000,
+                cbSize = 0
+            };
 
-        _isRecording = true;
-        int hdrSize = Marshal.SizeOf<WAVEHDR>();
-        for (int i = 0; i < 4; i++)
-        {
-            byte[] buf = new byte[1600]; // 50ms chunks at 16kHz 16-bit mono
-            var bufHandle = GCHandle.Alloc(buf, GCHandleType.Pinned);
-            var hdr = new WAVEHDR { lpData = bufHandle.AddrOfPinnedObject(), dwBufferLength = (uint)buf.Length };
-            IntPtr hdrPtr = Marshal.AllocHGlobal(hdrSize);
-            Marshal.StructureToPtr(hdr, hdrPtr, false);
-            _bufHandles.Add(bufHandle);
-            _headerPtrs.Add(hdrPtr);
-            waveInPrepareHeader(_waveInHandle, hdrPtr, hdrSize);
-            waveInAddBuffer(_waveInHandle, hdrPtr, hdrSize);
+            var dataEvent = new AutoResetEvent(false);
+            var stopEvent = new ManualResetEvent(false);
+
+            int rc = waveInOpen(
+                out IntPtr handle,
+                -1 /* WAVE_MAPPER */,
+                ref fmt,
+                dataEvent.SafeWaitHandle.DangerousGetHandle(),
+                IntPtr.Zero,
+                CALLBACK_EVENT);
+
+            if (rc != 0 || handle == IntPtr.Zero)
+            {
+                dataEvent.Dispose();
+                stopEvent.Dispose();
+                return false;
+            }
+
+            _waveInHandle = handle;
+            _dataReadyEvent = dataEvent;
+            _stopEvent = stopEvent;
+            _isRecording = true;
+
+            int hdrSize = Marshal.SizeOf<WAVEHDR>();
+            var sessionHeaders = new List<IntPtr>(4);
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    byte[] buf = new byte[1600]; // 50ms chunks at 16kHz 16-bit mono
+                    var bufHandle = GCHandle.Alloc(buf, GCHandleType.Pinned);
+                    var hdr = new WAVEHDR { lpData = bufHandle.AddrOfPinnedObject(), dwBufferLength = (uint)buf.Length };
+                    IntPtr hdrPtr = Marshal.AllocHGlobal(hdrSize);
+                    Marshal.StructureToPtr(hdr, hdrPtr, false);
+                    _bufHandles.Add(bufHandle);
+                    _headerPtrs.Add(hdrPtr);
+                    sessionHeaders.Add(hdrPtr);
+                    waveInPrepareHeader(handle, hdrPtr, hdrSize);
+                    waveInAddBuffer(handle, hdrPtr, hdrSize);
+                }
+
+                int startRc = waveInStart(handle);
+                if (startRc != 0)
+                {
+                    StopMicrophoneRecordingCore();
+                    return false;
+                }
+            }
+            catch
+            {
+                StopMicrophoneRecordingCore();
+                return false;
+            }
+
+            // Dedicated event-driven reader thread avoids re-entering winmm inside waveInProc
+            // and never holds WinMM's internal device lock while notifying UI subscribers.
+            _readerThread = new Thread(() => WaveInReaderLoop(handle, sessionHeaders, dataEvent, stopEvent, hdrSize))
+            {
+                IsBackground = true,
+                Name = "LaptopTester-WaveInReader"
+            };
+            _readerThread.Start();
+            return true;
         }
-
-        waveInStart(_waveInHandle);
-        return true;
     }
 
-    private void OnWaveInData(IntPtr hwi, int uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2)
+    private void WaveInReaderLoop(
+        IntPtr handle,
+        IReadOnlyList<IntPtr> headers,
+        AutoResetEvent dataEvent,
+        ManualResetEvent stopEvent,
+        int hdrSize)
     {
-        if (uMsg != 0x3C0 /* WIM_DATA */ || !_isRecording || dwParam1 == IntPtr.Zero)
-            return;
+        WaitHandle[] waits = [dataEvent, stopEvent];
+        var pendingLevels = new List<double>(4);
 
-        var hdr = Marshal.PtrToStructure<WAVEHDR>(dwParam1);
-        if (hdr.dwBytesRecorded >= 2)
+        while (_isRecording)
         {
-            byte[] chunk = new byte[hdr.dwBytesRecorded];
-            Marshal.Copy(hdr.lpData, chunk, 0, chunk.Length);
-            lock (_recLock) _recordedPcm.Write(chunk, 0, chunk.Length);
+            int signaled;
+            try
+            {
+                signaled = WaitHandle.WaitAny(waits, 200);
+            }
+            catch (ObjectDisposedException)
+            {
+                break;
+            }
 
-            MicrophoneLevelMeasured?.Invoke(this, ComputeNormalizedRms(chunk));
-        }
+            if (signaled == 1 || !_isRecording)
+                break;
 
-        if (_isRecording && _waveInHandle != IntPtr.Zero)
-        {
-            waveInAddBuffer(_waveInHandle, dwParam1, Marshal.SizeOf<WAVEHDR>());
+            pendingLevels.Clear();
+            foreach (var hdrPtr in headers)
+            {
+                if (!_isRecording)
+                    break;
+
+                var hdr = Marshal.PtrToStructure<WAVEHDR>(hdrPtr);
+                if ((hdr.dwFlags & WHDR_DONE) == 0)
+                    continue;
+
+                if (hdr.dwBytesRecorded >= 2)
+                {
+                    byte[] chunk = new byte[hdr.dwBytesRecorded];
+                    Marshal.Copy(hdr.lpData, chunk, 0, chunk.Length);
+                    lock (_recLock) _recordedPcm.Write(chunk, 0, chunk.Length);
+                    pendingLevels.Add(ComputeNormalizedRms(chunk));
+                }
+
+                if (_isRecording)
+                {
+                    try { waveInAddBuffer(handle, hdrPtr, hdrSize); } catch { }
+                }
+            }
+
+            foreach (double level in pendingLevels)
+            {
+                if (!_isRecording)
+                    break;
+                try
+                {
+                    MicrophoneLevelMeasured?.Invoke(this, level);
+                }
+                catch
+                {
+                    // Never allow a subscriber exception to crash or stall audio capture.
+                }
+            }
         }
     }
 
@@ -222,103 +329,146 @@ public sealed class AudioCameraService : IDisposable
         lock (_recLock) pcm = _recordedPcm.ToArray();
         if (pcm.Length == 0) return;
 
-        StopPlayback();
         byte[] wav = WrapMonoPcmAsWav(pcm, 16000);
         PlayWaveBytes(wav);
     }
 
     public void StopMicrophoneRecording()
     {
-        _isRecording = false;
-        if (_waveInHandle != IntPtr.Zero)
+        lock (_waveInLifecycleLock)
         {
-            try { waveInStop(_waveInHandle); } catch { }
-            try { waveInReset(_waveInHandle); } catch { }
+            StopMicrophoneRecordingCore();
+        }
+    }
+
+    private void StopMicrophoneRecordingCore()
+    {
+        _isRecording = false;
+        try { _stopEvent?.Set(); } catch { }
+        try { _dataReadyEvent?.Set(); } catch { }
+
+        IntPtr handle = _waveInHandle;
+        if (handle != IntPtr.Zero)
+        {
+            try { waveInStop(handle); } catch { }
+            try { waveInReset(handle); } catch { }
+        }
+
+        // Wait for the background reader loop to exit before unpreparing/freeing buffers.
+        var thread = _readerThread;
+        _readerThread = null;
+        bool readerExited = true;
+        if (thread is { IsAlive: true } && thread != Thread.CurrentThread)
+        {
+            readerExited = thread.Join(1500);
+        }
+
+        if (handle != IntPtr.Zero)
+        {
             int hdrSize = Marshal.SizeOf<WAVEHDR>();
             foreach (var ptr in _headerPtrs)
             {
-                try { waveInUnprepareHeader(_waveInHandle, ptr, hdrSize); } catch { }
+                try { waveInUnprepareHeader(handle, ptr, hdrSize); } catch { }
             }
-            try { waveInClose(_waveInHandle); } catch { }
+            try { waveInClose(handle); } catch { }
             _waveInHandle = IntPtr.Zero;
         }
-        foreach (var ptr in _headerPtrs) Marshal.FreeHGlobal(ptr);
-        _headerPtrs.Clear();
-        foreach (var h in _bufHandles)
+
+        if (readerExited)
         {
-            if (h.IsAllocated) h.Free();
+            foreach (var ptr in _headerPtrs) Marshal.FreeHGlobal(ptr);
+            _headerPtrs.Clear();
+            foreach (var h in _bufHandles)
+            {
+                if (h.IsAllocated) h.Free();
+            }
+            _bufHandles.Clear();
+
+            try { _dataReadyEvent?.Dispose(); } catch { }
+            try { _stopEvent?.Dispose(); } catch { }
+            _dataReadyEvent = null;
+            _stopEvent = null;
         }
-        _bufHandles.Clear();
     }
 
     public async Task<IReadOnlyList<string>> EnumerateCamerasAsync(CancellationToken ct = default)
     {
         var rows = await WmiQueryHelper.QueryAsync(
             "SELECT Name, Status FROM Win32_PnPEntity WHERE PNPClass = 'Camera' OR PNPClass = 'Image'",
-            ct: ct);
+            ct: ct).ConfigureAwait(false);
         return rows.Select(r => $"{WmiQueryHelper.Str(r, "Name")} ({WmiQueryHelper.Str(r, "Status", "OK")})")
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
             .ToList();
     }
 
-    /// <summary>Plays a brief tone while listening on the default microphone to auto-verify speaker and mic hardware.</summary>
-    public async Task<AcousticLoopbackResult> RunAcousticLoopbackTestAsync(
+    /// <summary>Plays a brief tone while listening on the default microphone entirely off the UI thread.</summary>
+    public Task<AcousticLoopbackResult> RunAcousticLoopbackTestAsync(
         double chimeDurationSec = 0.75,
         double thresholdNormalizedRms = 0.08,
         CancellationToken ct = default)
     {
-        var summary = GetAudioDevices();
-        bool outOk = summary.OutputDeviceCount > 0;
-        bool inOk = summary.InputDeviceCount > 0;
-        if (!outOk || !inOk)
+        return Task.Run(async () =>
         {
-            return new AcousticLoopbackResult(
-                outOk,
-                inOk,
-                0,
-                false,
-                !outOk && !inOk
-                    ? "No speakers or microphone devices detected"
-                    : !outOk
-                        ? "No speaker output device detected"
-                        : "No microphone input device detected");
-        }
-
-        double peakRms = 0;
-        bool micStarted = false;
-
-        void Handler(object? _, double level)
-        {
-            if (level > peakRms) peakRms = level;
-        }
-
-        MicrophoneLevelMeasured += Handler;
-        try
-        {
-            micStarted = StartMicrophoneRecording();
-            if (!micStarted)
+            var summary = GetAudioDevices();
+            bool outOk = summary.OutputDeviceCount > 0;
+            bool inOk = summary.InputDeviceCount > 0;
+            if (!outOk || !inOk)
             {
-                return new AcousticLoopbackResult(true, false, 0, false,
-                    "Microphone capture could not open (in use or permission blocked)");
+                return new AcousticLoopbackResult(
+                    outOk,
+                    inOk,
+                    0,
+                    false,
+                    !outOk && !inOk
+                        ? "No speakers or microphone devices detected"
+                        : !outOk
+                            ? "No speaker output device detected"
+                            : "No microphone input device detected");
             }
 
-            await Task.Delay(120, ct);
-            PlayStereoTest(left: true, right: true, freqHz: 880, durationSec: chimeDurationSec);
-            await Task.Delay((int)(chimeDurationSec * 1000) + 150, ct);
+            double peakRms = 0;
+            object peakLock = new();
+            bool micStarted = false;
 
-            bool detected = peakRms >= thresholdNormalizedRms;
-            string note = detected
-                ? $"Acoustic loopback verified speaker + mic (peak {Math.Round(peakRms * 100):F0}%)"
-                : $"Tone played but mic heard low/no signal ({Math.Round(peakRms * 100):F0}%) — confirm manually if muted/headphones";
-            return new AcousticLoopbackResult(true, true, Math.Round(peakRms, 3), detected, note);
-        }
-        finally
-        {
-            MicrophoneLevelMeasured -= Handler;
-            StopPlayback();
-            if (micStarted) StopMicrophoneRecording();
-        }
+            void Handler(object? _, double level)
+            {
+                lock (peakLock)
+                {
+                    if (level > peakRms) peakRms = level;
+                }
+            }
+
+            MicrophoneLevelMeasured += Handler;
+            try
+            {
+                micStarted = StartMicrophoneRecording();
+                if (!micStarted)
+                {
+                    return new AcousticLoopbackResult(true, false, 0, false,
+                        "Microphone capture could not open (in use or permission blocked)");
+                }
+
+                await Task.Delay(120, ct).ConfigureAwait(false);
+                PlayStereoTest(left: true, right: true, freqHz: 880, durationSec: chimeDurationSec);
+                await Task.Delay((int)(chimeDurationSec * 1000) + 150, ct).ConfigureAwait(false);
+
+                double observedPeak;
+                lock (peakLock) observedPeak = peakRms;
+
+                bool detected = observedPeak >= thresholdNormalizedRms;
+                string note = detected
+                    ? $"Acoustic loopback verified speaker + mic (peak {Math.Round(observedPeak * 100):F0}%)"
+                    : $"Tone played but mic heard low/no signal ({Math.Round(observedPeak * 100):F0}%) — confirm manually if muted/headphones";
+                return new AcousticLoopbackResult(true, true, Math.Round(observedPeak, 3), detected, note);
+            }
+            finally
+            {
+                MicrophoneLevelMeasured -= Handler;
+                StopPlayback();
+                if (micStarted) StopMicrophoneRecording();
+            }
+        }, ct);
     }
 
     internal static double ComputeNormalizedRms(byte[] pcm16)
