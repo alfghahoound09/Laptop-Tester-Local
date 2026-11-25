@@ -1,209 +1,95 @@
-<p align="center">
-  <img src="screenshots/dashboard.png" alt="LaptopTester v3.3" width="800">
-</p>
-
-<h1 align="center">LaptopTester v3.3.3</h1>
+<h1 align="center">LaptopTester</h1>
 
 <p align="center">
-  <a href="https://laptoptester.web.app"><img src="https://img.shields.io/badge/Website-laptoptester.web.app-22c55e?style=for-the-badge" alt="Website"></a>
-  <a href="https://github.com/anlvdt/LaptopTester/releases/latest"><img src="https://img.shields.io/badge/Download-v3.3.3-blue?style=for-the-badge" alt="Download"></a>
+  <strong>Open-source Windows laptop hardware diagnostics, anti-fake verification, and peripheral test suite built with C# / WPF (.NET 10).</strong>
 </p>
 
 ---
 
-> **[English version below](#english)**
+## Introduction
 
-## Giới thiệu
+**LaptopTester** is a lightweight, portable Windows 10/11 diagnostic application designed for inspecting laptops before buying, selling, or servicing. Instead of trusting a single Windows reporting layer that can be altered through Registry or display hooks, LaptopTester cross-checks hardware specifications across multiple independent sources and combines hardware health checks, stress tests, and interactive peripheral tests into a single dark-themed WPF workspace.
 
-Mình là Lê Văn Ẩn, làm nghề mua bán laptop cũ ở Việt Nam.
-
-Mình viết LaptopTester vì gặp quá nhiều máy bị fake cấu hình. Một lần mua máy được quảng cáo i7 / 16GB RAM / 512GB SSD, mở lên thì System Properties, Task Manager, Dxdiag đều hiện đúng. Nhưng dùng thực tế thì chậm bất thường. Kiểm tra kỹ thì phát hiện RAM thật chỉ 8GB (thông số hiển thị bị sửa qua Registry), ổ cứng là HDD 500GB đặt tên giống SSD.
-
-Những thủ thuật này không phức tạp -- chỉ cần sửa vài giá trị Registry và thay đổi thông số WMI. Người mua mở máy lên, xem Properties, thấy đúng là tin. Kể cả kỹ thuật viên cũng bị qua mặt nếu chỉ kiểm tra bằng một nguồn.
-
-Bản đầu tiên viết bằng Python vào tháng 10/2025, chạy console để so sánh thông số từ WMI, Registry và SMBIOS. Dần dần thêm kiểm tra pin, bàn phím, màn hình, USB... vì mỗi lần mua máy cần kiểm tra nhiều thứ mà không có công cụ nào làm hết.
-
-Sau khoảng 5 tháng, v3.3 được viết lại bằng C# / WPF, giao diện tối Spotify-style, chạy từ USB không cần cài đặt.
-
-Tính năng mình tâm đắc nhất là **Quick Test**. Với nhiều người, khi đi mua laptop cũ, việc nên test cái gì, dùng phần mềm nào, test như thế nào là cả một vấn đề. Quick Test giải quyết chuyện đó -- quy trình 10 bước có hướng dẫn cụ thể: phần cứng, ổ cứng, pin, màn hình, bàn phím, touchpad, loa, micro, camera. Chỉ cần nhấn bắt đầu, làm theo, cuối cùng nhận tổng điểm /100 và đánh giá: "Máy tốt", "Cần cân nhắc" hoặc "Không nên mua".
-
-Phần mềm còn nhiều hạn chế, mình sẽ cải thiện dần.
+- **Stack:** C# / WPF targeting `.NET 10` (`net10.0-windows`), `CommunityToolkit.Mvvm`, `Microsoft.Extensions.DependencyInjection`, `System.Management` (WMI), Win32 P/Invoke (`GetSystemFirmwareTable`, `winmm.dll`, `wlanapi.dll`, `bthprops.cpl`), and Windows Registry APIs.
+- **Bilingual UI:** Live Vietnamese / English switching (`VI` / `EN`).
+- **Keyboard Navigation:** Quick tab switching via `F1`–`F7`.
 
 ---
 
-## Tính năng
+## Functions
 
-### Chống giả mạo cấu hình
+### 1. System Overview Dashboard (`F1`)
+- Detects and summarizes **Model**, **OS / Build**, **CPU** (cores/threads/max clock), **RAM** (installed capacity, type, speed), **GPU** (WMI with Registry `DriverDesc` fallback), **Storage**, **Display** (resolution, refresh rate, EDID panel identity), and **Battery** status.
+- Displays current execution privilege (`Standard User` or `Administrator`) and session check count.
+- Provides one-click shortcuts to Hardware Scan, Battery Health, Anti-Fake Audit, Benchmark, and the Quick Test Wizard.
 
-Truy vấn đồng thời 3 nguồn độc lập, phát hiện sai lệch ngay lập tức:
+### 2. Guided 10-Step Quick Test Wizard (`F2`)
+- Evaluates laptops on a weighted **100-point scale** across 10 diagnostic steps:
+  1. Hardware & Anti-Fake (`18` pts)
+  2. Storage & SMART Health (`14` pts)
+  3. Battery & Real Capacity (`14` pts)
+  4. Display & Dead Pixels (`12` pts)
+  5. Keyboard (`10` pts)
+  6. Touchpad & Pointer (`8` pts)
+  7. Stereo Speakers (`6` pts)
+  8. Microphone Recording (`6` pts)
+  9. Webcam Check (`6` pts)
+  10. USB / Wi-Fi / Bluetooth (`6` pts)
+- Runs automated checks (`Hardware`, `Anti-Fake`, `Storage`, `Battery`, `Connectivity`), links directly to interactive peripheral tests, tracks point deductions, and outputs a purchase verdict (`Good`, `Consider carefully`, or `Do not buy`).
 
-| Nguồn | Mô tả |
-|-------|-------|
-| WMI | Nguồn mà System Properties, Task Manager, Dxdiag dùng. Có thể bị sửa bằng phần mềm. |
-| Registry | Một số phần mềm fake sửa ở đây để thay đổi hiển thị. |
-| SMBIOS / BIOS | Thông số trên firmware phần cứng. Rất khó giả mạo vì nằm ở tầng thấp hơn OS. |
+### 3. Hardware Hub (`F3`)
+- **Hardware Scan:** Lists CPU architecture/cache, per-slot RAM modules (`Capacity`, `Speed`, `Type`, `Manufacturer`, `PartNumber`), GPUs, physical drives, and connected monitors.
+- **3-Source Anti-Fake Audit:** Cross-checks **Windows/WMI**, **Registry / OS API**, and raw **SMBIOS firmware tables** (`GetSystemFirmwareTable('RSMB')` with `mssmbios\Data` fallback) for CPU name, RAM total, System Model/BIOS, physical storage media (`SSD` vs `HDD` bus truth), and known spoofing process indicators.
+- **Battery Health & Stress Test:** Reads design vs. full-charged capacity (`mWh`), health percentage, cycle count, voltage, and charge/discharge rate (`W`); includes a pre-test checklist and a 30-second multi-core CPU drain stress test.
+- **Thermal & Benchmark:** Captures ACPI thermal zones and drive SMART temperatures (where exposed by the board/permissions), runs single-core and multi-core prime CPU benchmarks, measures RAM copy bandwidth (`GB/s`), and optionally includes sequential disk speed.
+- **Storage Speed & System Audit:** Measures `128 MB` sequential read/write throughput (`MB/s`), checks `MSFT_PhysicalDisk` / `MSStorageDriver_FailurePredictStatus`, audits Device Manager error codes (`Win32_PnPEntity`), and lists `Run` / `RunOnce` / Startup folder entries.
 
-<p align="center">
-  <img src="screenshots/antifake.png" alt="Chống giả mạo" width="700">
-</p>
+### 4. Device Hub (`F4`)
+- **Keyboard Test:** Interactive visual QWERTY layout that highlights pressed and tested keys in real time, tracks key count, and detects stuck keys.
+- **Display Test:** Fullscreen test patterns for **Solid Colors** (Black, White, Red, Green, Blue, 50% Gray), **Gradient Ramp**, and **Pixel Alignment Grid** (`Space`/Click next, Right-Click/Left previous, `Esc` exit).
+- **Touchpad & Mouse Test:** Drawing canvas (`InkCanvas`) with real-time Left, Right, Middle click counters and scroll wheel event counter.
+- **Speaker & Microphone Test:** Pure PCM stereo WAV synthesis (**Left**, **Right**, **Both**, and **160–4000 Hz Sweep**) via `winmm.dll`, plus live `waveIn` microphone recording with RMS level bar and playback.
+- **USB Live Watcher:** Enumerates USB controllers and connected USB devices with speed hints and a live WMI plug/unplug event watcher.
+- **Wi-Fi + Bluetooth:** Scans available Wi-Fi networks (`wlanapi.dll`) with signal quality/PHY info and detects Bluetooth radios (`bthprops.cpl`).
+- **Webcam, Charger & Physical Checklist:** Enumerates detected cameras, reads live AC charger wattage/voltage, and provides a physical hinge/chassis/fan inspection checklist.
 
-### Kiểm tra pin
-
-- Sức khỏe pin (%), so sánh dung lượng thiết kế vs thực tế
-- Số chu kỳ sạc, nhà sản xuất pin, điện áp
-- Stress test với workload thực tế và đo thời gian xả
-
-<p align="center">
-  <img src="screenshots/battery.png" alt="Kiểm tra pin" width="700">
-</p>
-
-### Quét phần cứng
-
-- CPU: tên, nhân/luồng, xung nhịp
-- RAM: dung lượng, tốc độ, nhà sản xuất
-- GPU, ổ cứng (NVMe/SATA/HDD), ổ ngoài
-- Đánh giá cân bằng CPU-GPU, khả năng nâng cấp
-
-<p align="center">
-  <img src="screenshots/hardware.png" alt="Quét phần cứng" width="700">
-</p>
-
-### Thiết bị ngoại vi -- 12 bài test
-
-| Nhập liệu | Hiển thị & Âm thanh | Kết nối |
-|---|---|---|
-| Bàn phím | Màn hình -- điểm chết, hở sáng | WiFi + Bluetooth |
-| Touchpad | Loa -- stereo trái/phải | Cổng USB |
-| Webcam | | |
-| Microphone | | |
-
-<p align="center">
-  <img src="screenshots/keyboard.png" alt="Thiết bị ngoại vi" width="700">
-</p>
-
-### Cổng USB
-
-Phát hiện loại cổng (USB 2.0/3.0/3.1/USB-C/Thunderbolt 4), tốc độ, vị trí, công suất sạc PD.
-
-<p align="center">
-  <img src="screenshots/usb.png" alt="Cổng USB" width="700">
-</p>
-
-### Khác
-
-- Nhiệt độ CPU/GPU theo thời gian thực
-- Benchmark CPU, GPU, ổ cứng
-- AI tư vấn (cần API Key Cloudflare miễn phí)
-- Xuất báo cáo HTML/PDF
-- Lịch sử test, phím tắt F1-F7
-- Song ngữ Việt -- Anh
+### 5. Reports, History & Settings (`F5`–`F7`)
+- **Report (`F5`):** Displays consolidated results, score `/100`, deductions, and custom notes; exports **HTML** (print-ready for Print-to-PDF) and **JSON** reports.
+- **History (`F6`):** Persists and manages saved test sessions as JSON under `%LocalAppData%\LaptopTester\history`.
+- **Settings (`F7`):** Toggles `Vietnamese` / `English` language, displays current privilege status, and opens the local history directory.
 
 ---
 
-## Tải về
+## Project Structure
 
-**[Tải LaptopTester v3.3.3](https://github.com/anlvdt/LaptopTester/releases/latest)** -- File .exe (~271 MB), tích hợp runtime, không cần cài đặt, chạy từ USB.
-
-Yêu cầu: Windows 10/11 (64-bit), quyền Administrator.
-
-## Bảng giá
-
-| | Free | Pro (149K, trả một lần) |
-|---|---|---|
-| Quét phần cứng, thiết bị, pin, nhiệt độ | Có | Có |
-| Chống fake đa nguồn | -- | Có |
-| Benchmark, AI tư vấn | -- | Có |
-| Xuất báo cáo PDF | -- | Có |
-
-Chi tiết: [laptoptester.web.app](https://laptoptester.web.app)
-
-## Phiên bản
-
-| Version | Ghi chú |
-|---------|---------|
-| v3.3.3 | Patch: fix Settings layout, Shopee Affiliate, license path portable. |
-| v3.3.2 | Patch: fix tất cả nút mở URL không hoạt động khi chạy Administrator. |
-| v3.3.1 | Patch: fix app chạy background không hiện UI. |
-| v3.3 | C# / WPF / .NET 8. Giao diện tối, AI advisor, song ngữ. |
-| v2.x | Python (10/2025). Không còn phát triển. |
-
-## Liên hệ
-
-- Facebook: [fb.com/anlvdt](https://www.facebook.com/anlvdt)
-- Zalo: 0976896621
+```text
+LaptopTester.sln
+├── src/
+│   ├── LaptopTester.Core/   # SMBIOS, WMI, Registry, Audio, USB/Wi-Fi/BT, Benchmark, Scoring, Reporting
+│   └── LaptopTester.App/    # .NET 10 WPF MVVM UI, Dark Theme, Views & ViewModels
+└── tests/
+    └── LaptopTester.Tests/  # Core hardware & diagnostic self-test harness
+```
 
 ---
 
-<h2 id="english">English</h2>
+## Build & Run
 
-### About
+**Requirements:** Windows 10/11 (64-bit) and [.NET 10 SDK](https://dotnet.microsoft.com/). Running as **Administrator** is optional (needed only if your board restricts ACPI thermal sensors).
 
-I'm Le Van An, a used laptop dealer in Vietnam.
+```powershell
+# Build solution
+dotnet build LaptopTester.sln
 
-I built LaptopTester because I kept running into machines with faked specs. Once I bought a machine advertised as i7 / 16GB RAM / 512GB SSD -- System Properties, Task Manager, and Dxdiag all confirmed those numbers. But it was unusually slow. Digging deeper, I found the actual RAM was only 8GB (display values were modified via Registry), and the drive was a 500GB HDD renamed to look like an SSD.
+# Run core diagnostic self-tests
+dotnet run --project tests/LaptopTester.Tests/LaptopTester.Tests.csproj
 
-These tricks aren't complicated -- just editing Registry values and altering WMI display data. Buyers check Properties, see matching specs, and trust it. Even technicians get fooled when only checking one source.
-
-The first version was a Python console app in October 2025, cross-checking specs between WMI, Registry and SMBIOS. Over time I added battery, keyboard, display, USB tests -- because every used machine needed checking across many components and no single tool covered everything.
-
-After about 5 months, v3.3 was fully rewritten in C# / WPF with a dark Spotify-style interface, running directly from USB.
-
-My favorite feature is **Quick Test**. For many people buying a used laptop, knowing what to test, which tool to use, and how to do it properly is already a challenge. Quick Test solves that -- a guided 10-step diagnostic covering hardware, storage, battery, display, keyboard, touchpad, speaker, mic, and camera. Just press start, follow the steps, and get a score out of 100 with a clear verdict: "Good", "Consider carefully", or "Don't buy".
-
-The software still has room for improvement. I share it for anyone who finds it useful.
-
-### Download
-
-**[Download LaptopTester v3.3.3](https://github.com/anlvdt/LaptopTester/releases/latest)** -- Single .exe (~271 MB), runtime included, no installation, runs from USB.
-
-Requires: Windows 10/11 (64-bit), Administrator privileges.
-
-### Pricing
-
-| | Free | Pro (149K VND, one-time) |
-|---|---|---|
-| Hardware scan, device testing, battery, temperature | Yes | Yes |
-| Multi-source anti-fake | -- | Yes |
-| Benchmark, AI advisor | -- | Yes |
-| PDF report export | -- | Yes |
-
-Details: [laptoptester.web.app](https://laptoptester.web.app)
----
-
-## Tác giả
-
-**Le Van An** (Vietnam IT)
-
-[![GitHub](https://img.shields.io/badge/GitHub-anlvdt-181717?style=for-the-badge&logo=github)](https://github.com/anlvdt)
-
-## Ủng hộ dự án
-
-Nếu bạn thấy dự án hữu ích, hãy cân nhắc ủng hộ tác giả.
-
-### Chuyển khoản
-
-| Phương thức | Số tài khoản | Chủ tài khoản |
-|------------|-------------|---------------|
-| MB Bank | `0360126996868` | LE VAN AN |
-| Momo | `0976896621` | LE VAN AN |
-
-### Shopee Affiliate
-
-Mình làm Affiliate Shopee, nếu thấy sản phẩm hữu ích hãy ủng hộ mình một click nhé. Chỉ cần click không cần mua cũng được!
-
-[![Shopee](https://img.shields.io/badge/Shopee-EE4D2D?style=for-the-badge&logo=shopee&logoColor=white)](https://s.shopee.vn/7AYWh5NzOB)
-
-**[Xem sản phẩm trên Shopee](https://s.shopee.vn/7AYWh5NzOB)** — Xin cảm ơn!
-
-### Ủng hộ khác
-
-- Star repo trên GitHub
-- Chia sẻ dự án cho bạn bè, đồng nghiệp
-- Báo bug hoặc đề xuất tính năng mới qua Issues
-- Đóng góp code qua Pull Requests
+# Launch WPF desktop app
+dotnet run --project src/LaptopTester.App/LaptopTester.App.csproj
+```
 
 ---
 
 ## License
 
-MIT License — Copyright (c) 2026 Le An (Vietnam IT)
+MIT License — See repository history for attribution.
