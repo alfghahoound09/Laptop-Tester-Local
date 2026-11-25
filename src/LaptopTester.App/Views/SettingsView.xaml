@@ -1,0 +1,32 @@
+<UserControl x:Class="LaptopTester.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="Cài Đặt &amp; Thông Tin" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,16"/>
+
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="NGÔN NGỮ / LANGUAGE" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <CheckBox Content="Tiếng Việt (bỏ chọn để dùng English)" IsChecked="{Binding IsVietnamese}" Style="{StaticResource DarkCheckBoxStyle}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="HỆ THỐNG &amp; LƯU TRỮ" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{Binding PrivilegeText}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding HistoryFolder, StringFormat='{}Thư mục lịch sử: {0}'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <Button Content="Mở thư mục Lịch sử" Command="{Binding OpenHistoryFolderCommand}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock Text="ABOUT LAPTOPTESTER OPEN EDITION" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Clean-room open-source .NET 10 WPF diagnostic suite built from the project specification and design system." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
