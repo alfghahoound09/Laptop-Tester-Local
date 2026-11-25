@@ -145,7 +145,7 @@ public sealed class HardwareService
 
         string batterySummary = !battery.HasBattery
             ? "AC Desktop / No Battery"
-            : $"{battery.ChargePercent}% ({(battery.IsCharging ? "Charging" : battery.IsOnAcPower ? "AC Plugged" : "Discharging")}) · Health {battery.HealthPercent:F0}%";
+            : $"{battery.ChargePercent}% ({(battery.IsCharging ? "Charging" : battery.IsOnAcPower ? "AC Plugged" : "Discharging")}) · Health {battery.HealthPercent:F0}% · Cycles {battery.CycleDisplay}";
 
         var summary = new SystemSummary(
             mfg, model, osName, osBuild,

@@ -36,6 +36,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _canGoBack;
     [ObservableProperty] private bool _isNavExpanded = true;
     [ObservableProperty] private double _navPaneWidth = 224;
+    [ObservableProperty] private bool _hasAvailableUpdate;
+    [ObservableProperty] private string _availableUpdateLabel = "";
 
     public DashboardViewModel Dashboard { get; }
     public QuickTestViewModel QuickTest { get; }
@@ -74,6 +76,12 @@ public partial class MainViewModel : ObservableObject
         };
 
         _store.ResultsChanged += (_, _) => RefreshSessionBadge();
+        Settings.UpdateStatusChanged += res =>
+        {
+            HasAvailableUpdate = res.IsUpdateAvailable && res.PrimaryAsset is not null;
+            AvailableUpdateLabel = HasAvailableUpdate ? $"Update {res.LatestRelease?.TagName}" : "";
+        };
+
         var ver = typeof(MainViewModel).Assembly.GetName().Version;
         AppVersionLabel = ver is not null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "v1.0.0";
         PrivilegeShortLabel = HardwareService.IsCurrentProcessAdministrator() ? "ADMIN" : "STANDARD";
@@ -129,6 +137,16 @@ public partial class MainViewModel : ObservableObject
     {
         IsNavExpanded = !IsNavExpanded;
         NavPaneWidth = IsNavExpanded ? 224 : 64;
+    }
+
+    [RelayCommand]
+    private void OpenUpdateSettings() => Navigate(AppTab.Settings);
+
+    public async Task CheckForUpdateInBackgroundAsync()
+    {
+        if (!Settings.AutoCheckUpdates) return;
+        await Task.Delay(2200);
+        await Settings.CheckQuietlyOnStartupAsync();
     }
 
     private void RefreshSessionBadge()

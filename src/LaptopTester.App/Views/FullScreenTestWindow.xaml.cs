@@ -1,13 +1,17 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using LaptopTester.Core.Models;
 
 namespace LaptopTester.App.Views;
 
 public partial class FullScreenTestWindow : Window
 {
     private readonly string _mode;
+    private readonly bool _expressConfirmMode;
     private int _stepIndex;
+
+    public TestStatus? ExpressVerdict { get; private set; }
 
     private static readonly (string Name, Color Color)[] SolidColors =
     [
@@ -19,10 +23,11 @@ public partial class FullScreenTestWindow : Window
         ("50% Gray (#808080)", Color.FromRgb(128, 128, 128))
     ];
 
-    public FullScreenTestWindow(string mode)
+    public FullScreenTestWindow(string mode, bool expressConfirmMode = false)
     {
         InitializeComponent();
         _mode = mode;
+        _expressConfirmMode = expressConfirmMode;
         ApplySlide();
     }
 
@@ -56,7 +61,9 @@ public partial class FullScreenTestWindow : Window
 
         var (name, color) = SolidColors[_stepIndex % SolidColors.Length];
         RootGrid.Background = new SolidColorBrush(color);
-        HintText.Text = $"{name}  ·  Click / Space = Next  ·  Right-Click = Prev  ·  Esc = Exit";
+        HintText.Text = _expressConfirmMode
+            ? $"{name}  ·  Space / Click = Next  ·  P = Pass  ·  F = Fail  ·  Esc = Exit"
+            : $"{name}  ·  Click / Space = Next  ·  Right-Click = Prev  ·  Esc = Exit";
     }
 
     private void NextSlide()
@@ -76,8 +83,36 @@ public partial class FullScreenTestWindow : Window
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape) Close();
-        else if (e.Key is Key.Space or Key.Right or Key.Enter) NextSlide();
-        else if (e.Key == Key.Left) PrevSlide();
+        if (e.Key == Key.Escape)
+        {
+            Close();
+        }
+        else if (_expressConfirmMode && e.Key == Key.P)
+        {
+            ExpressVerdict = TestStatus.Passed;
+            Close();
+        }
+        else if (_expressConfirmMode && e.Key == Key.F)
+        {
+            ExpressVerdict = TestStatus.Failed;
+            Close();
+        }
+        else if (!_expressConfirmMode && e.Key == Key.Enter)
+        {
+            NextSlide();
+        }
+        else if (_expressConfirmMode && e.Key == Key.Enter)
+        {
+            ExpressVerdict = TestStatus.Passed;
+            Close();
+        }
+        else if (e.Key is Key.Space or Key.Right)
+        {
+            NextSlide();
+        }
+        else if (e.Key == Key.Left)
+        {
+            PrevSlide();
+        }
     }
 }

@@ -11,17 +11,23 @@ namespace LaptopTester.App.ViewModels;
 
 public partial class KeyTileState : ObservableObject
 {
-    public KeyTileState(string code, string label, double width = 46)
+    public KeyTileState(string code, string label, double x, double y, double width, double height = 46)
     {
         Code = code;
         Label = label;
+        X = x;
+        Y = y;
         Width = width;
+        Height = height;
         KeyValue = Enum.TryParse<Key>(code, true, out var parsed) ? parsed : null;
     }
 
     public string Code { get; }
     public string Label { get; }
+    public double X { get; }
+    public double Y { get; }
     public double Width { get; }
+    public double Height { get; }
     public Key? KeyValue { get; }
     [ObservableProperty] private bool _isPressed;
     [ObservableProperty] private bool _isTested;
@@ -36,10 +42,25 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private string _activeSection = "Hub";
 
+    // Immediate live status badges per device test
+    [ObservableProperty] private TestStatus _keyboardStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _displayStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _touchpadStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _speakerStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _microphoneStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _audioHubStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _usbStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _connectivityStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _cameraStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _chargerStatus = TestStatus.Pending;
+    [ObservableProperty] private TestStatus _physicalStatus = TestStatus.Pending;
+
     // Keyboard
     [ObservableProperty] private string _lastKeyText = "Press any key on your keyboard to test it...";
     [ObservableProperty] private int _testedKeyCount;
+    [ObservableProperty] private int _totalKeyCount;
     public ObservableCollection<ObservableCollection<KeyTileState>> KeyboardRows { get; } = new();
+    public ObservableCollection<KeyTileState> KeyboardKeys { get; } = new();
 
     // Display
     [ObservableProperty] private string _displaySummary = "Full-screen color and grid checks to spot dead pixels, color tints, or light bleed";
@@ -94,10 +115,35 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         _audioService.MicrophoneLevelMeasured += (_, lvl) =>
             Application.Current?.Dispatcher.Invoke(() => MicLevelPercent = Math.Round(lvl * 100.0, 1));
 
+        _store.ResultsChanged += (_, _) => SyncStatusesFromStore();
+
         RefreshLabels();
         InitKeyboardRows();
         InitPhysicalChecklist();
         RefreshAudioDevices();
+        SyncStatusesFromStore();
+    }
+
+    private void SyncStatusesFromStore()
+    {
+        KeyboardStatus = _store.Get("keyboard")?.Status ?? TestStatus.Pending;
+        DisplayStatus = _store.Get("display")?.Status ?? TestStatus.Pending;
+        TouchpadStatus = _store.Get("touchpad")?.Status ?? TestStatus.Pending;
+        SpeakerStatus = _store.Get("speaker")?.Status ?? TestStatus.Pending;
+        MicrophoneStatus = _store.Get("microphone")?.Status ?? TestStatus.Pending;
+        UsbStatus = _store.Get("usb")?.Status ?? TestStatus.Pending;
+        ConnectivityStatus = _store.Get("connectivity")?.Status ?? TestStatus.Pending;
+        CameraStatus = _store.Get("camera")?.Status ?? TestStatus.Pending;
+        ChargerStatus = _store.Get("charger")?.Status ?? TestStatus.Pending;
+        PhysicalStatus = _store.Get("physical")?.Status ?? TestStatus.Pending;
+
+        AudioHubStatus = (SpeakerStatus, MicrophoneStatus) switch
+        {
+            (TestStatus.Failed, _) or (_, TestStatus.Failed) => TestStatus.Failed,
+            (TestStatus.Passed, TestStatus.Passed) => TestStatus.Passed,
+            (TestStatus.Passed, _) or (_, TestStatus.Passed) => TestStatus.Warning,
+            _ => TestStatus.Pending
+        };
     }
 
     private void RefreshLabels()
@@ -133,33 +179,39 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         }
     }
 
-    public void RecordKeyEvent(string keyCode, bool isDown)
+    public void RecordKeyEvent(string keyCode, bool isDown, bool? isExtended = null)
     {
         bool hasParsedKey = Enum.TryParse<Key>(keyCode, true, out var incomingKey);
-        foreach (var row in KeyboardRows)
+        foreach (var tile in KeyboardKeys)
         {
-            foreach (var tile in row)
+            bool matches = (hasParsedKey && tile.KeyValue == incomingKey)
+                || tile.Code.Equals(keyCode, StringComparison.OrdinalIgnoreCase);
+
+            if (matches && isExtended.HasValue && hasParsedKey && incomingKey == Key.Return)
             {
-                bool matches = (hasParsedKey && tile.KeyValue == incomingKey)
-                    || tile.Code.Equals(keyCode, StringComparison.OrdinalIgnoreCase);
-                if (matches)
+                // Distinguish physical Numpad Enter (extended flag = true) from Main Enter (false).
+                matches = isExtended.Value
+                    ? tile.Code.Equals("Enter", StringComparison.OrdinalIgnoreCase)
+                    : tile.Code.Equals("Return", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (matches)
+            {
+                tile.IsPressed = isDown;
+                if (isDown)
                 {
-                    tile.IsPressed = isDown;
-                    if (isDown)
-                    {
-                        tile.IsTested = true;
-                        LastKeyText = $"Last Key: {tile.Label} ({keyCode})";
-                    }
+                    tile.IsTested = true;
+                    LastKeyText = $"Last Key: {tile.Label} ({keyCode})";
                 }
             }
         }
-        TestedKeyCount = KeyboardRows.SelectMany(r => r).Count(k => k.IsTested);
+        TestedKeyCount = KeyboardKeys.Count(k => k.IsTested);
     }
 
     [RelayCommand]
     private void ResetKeyboard()
     {
-        foreach (var tile in KeyboardRows.SelectMany(r => r))
+        foreach (var tile in KeyboardKeys)
         {
             tile.IsPressed = false;
             tile.IsTested = false;
@@ -268,22 +320,76 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
 
     private void InitKeyboardRows()
     {
-        (string, string, double)[][] layout =
+        const double pitch = 52.0;
+        const double gap = 4.0;
+        const double rowH = 46.0;
+        const double tallH = 98.0; // Spans 2 rows + vertical spacing (46 + 6 + 46)
+
+        double[] rowY = [0, 62, 114, 166, 218, 270];
+
+        (string Code, string Label, double Col, double Units, double Height)[][] layout =
         [
-            [("Escape","Esc",46),("F1","F1",42),("F2","F2",42),("F3","F3",42),("F4","F4",42),("F5","F5",42),("F6","F6",42),("F7","F7",42),("F8","F8",42),("F9","F9",42),("F10","F10",42),("F11","F11",42),("F12","F12",42),("Delete","Del",48)],
-            [("Oem3","`",42),("D1","1",42),("D2","2",42),("D3","3",42),("D4","4",42),("D5","5",42),("D6","6",42),("D7","7",42),("D8","8",42),("D9","9",42),("D0","0",42),("OemMinus","-",42),("OemPlus","=",42),("Back","Backspace",84)],
-            [("Tab","Tab",64),("Q","Q",42),("W","W",42),("E","E",42),("R","R",42),("T","T",42),("Y","Y",42),("U","U",42),("I","I",42),("O","O",42),("P","P",42),("OemOpenBrackets","[",42),("Oem6","]",42),("Oem5","\\",62)],
-            [("Capital","Caps",74),("A","A",42),("S","S",42),("D","D",42),("F","F",42),("G","G",42),("H","H",42),("J","J",42),("K","K",42),("L","L",42),("Oem1",";",42),("OemQuotes","'",42),("Return","Enter",88)],
-            [("LeftShift","Shift",94),("Z","Z",42),("X","X",42),("C","C",42),("V","V",42),("B","B",42),("N","N",42),("M","M",42),("Oemcomma",",",42),("OemPeriod",".",42),("OemQuestion","/",42),("RightShift","Shift",102)],
-            [("LeftCtrl","Ctrl",58),("LWin","Win",50),("LeftAlt","Alt",50),("Space","Space",248),("RightAlt","Alt",50),("RightCtrl","Ctrl",58),("Left","←",42),("Up","↑",42),("Down","↓",42),("Right","→",42)]
+            // Row 0: Function row + PrintScreen/ScrollLock/Pause (16 keys)
+            [
+                ("Escape","Esc",0,1,rowH),
+                ("F1","F1",2,1,rowH),("F2","F2",3,1,rowH),("F3","F3",4,1,rowH),("F4","F4",5,1,rowH),
+                ("F5","F5",6.5,1,rowH),("F6","F6",7.5,1,rowH),("F7","F7",8.5,1,rowH),("F8","F8",9.5,1,rowH),
+                ("F9","F9",11,1,rowH),("F10","F10",12,1,rowH),("F11","F11",13,1,rowH),("F12","F12",14,1,rowH),
+                ("Snapshot","PrtSc",15.5,1,rowH),("Scroll","ScrLk",16.5,1,rowH),("Pause","Pause",17.5,1,rowH)
+            ],
+            // Row 1: Number row + Ins/Home/PgUp + Numpad top (21 keys)
+            [
+                ("Oem3","`",0,1,rowH),("D1","1",1,1,rowH),("D2","2",2,1,rowH),("D3","3",3,1,rowH),("D4","4",4,1,rowH),
+                ("D5","5",5,1,rowH),("D6","6",6,1,rowH),("D7","7",7,1,rowH),("D8","8",8,1,rowH),("D9","9",9,1,rowH),
+                ("D0","0",10,1,rowH),("OemMinus","-",11,1,rowH),("OemPlus","=",12,1,rowH),("Back","Backspace",13,2,rowH),
+                ("Insert","Ins",15.5,1,rowH),("Home","Home",16.5,1,rowH),("PageUp","PgUp",17.5,1,rowH),
+                ("NumLock","Num",19,1,rowH),("Divide","/",20,1,rowH),("Multiply","*",21,1,rowH),("Subtract","-",22,1,rowH)
+            ],
+            // Row 2: QWERTY + Del/End/PgDn + Numpad 7-9/+ (21 keys)
+            [
+                ("Tab","Tab",0,1.5,rowH),("Q","Q",1.5,1,rowH),("W","W",2.5,1,rowH),("E","E",3.5,1,rowH),("R","R",4.5,1,rowH),
+                ("T","T",5.5,1,rowH),("Y","Y",6.5,1,rowH),("U","U",7.5,1,rowH),("I","I",8.5,1,rowH),("O","O",9.5,1,rowH),
+                ("P","P",10.5,1,rowH),("OemOpenBrackets","[",11.5,1,rowH),("Oem6","]",12.5,1,rowH),("Oem5","\\",13.5,1.5,rowH),
+                ("Delete","Del",15.5,1,rowH),("End","End",16.5,1,rowH),("Next","PgDn",17.5,1,rowH),
+                ("NumPad7","7",19,1,rowH),("NumPad8","8",20,1,rowH),("NumPad9","9",21,1,rowH),("Add","+",22,1,tallH)
+            ],
+            // Row 3: Home row + Numpad 4-6 (16 keys)
+            [
+                ("Capital","Caps",0,1.75,rowH),("A","A",1.75,1,rowH),("S","S",2.75,1,rowH),("D","D",3.75,1,rowH),("F","F",4.75,1,rowH),
+                ("G","G",5.75,1,rowH),("H","H",6.75,1,rowH),("J","J",7.75,1,rowH),("K","K",8.75,1,rowH),("L","L",9.75,1,rowH),
+                ("Oem1",";",10.75,1,rowH),("OemQuotes","'",11.75,1,rowH),("Return","Enter",12.75,2.25,rowH),
+                ("NumPad4","4",19,1,rowH),("NumPad5","5",20,1,rowH),("NumPad6","6",21,1,rowH)
+            ],
+            // Row 4: Shift row + Up arrow + Numpad 1-3/Enter (17 keys)
+            [
+                ("LeftShift","Shift",0,2.25,rowH),("Z","Z",2.25,1,rowH),("X","X",3.25,1,rowH),("C","C",4.25,1,rowH),("V","V",5.25,1,rowH),
+                ("B","B",6.25,1,rowH),("N","N",7.25,1,rowH),("M","M",8.25,1,rowH),("OemComma",",",9.25,1,rowH),("OemPeriod",".",10.25,1,rowH),
+                ("OemQuestion","/",11.25,1,rowH),("RightShift","Shift",12.25,2.75,rowH),
+                ("Up","↑",16.5,1,rowH),
+                ("NumPad1","1",19,1,rowH),("NumPad2","2",20,1,rowH),("NumPad3","3",21,1,rowH),("Enter","Enter",22,1,tallH)
+            ],
+            // Row 5: Bottom modifier row + Left/Down/Right + Numpad 0/. (13 keys)
+            [
+                ("LeftCtrl","Ctrl",0,1.25,rowH),("LWin","Win",1.25,1.25,rowH),("LeftAlt","Alt",2.5,1.25,rowH),("Space","Space",3.75,6.25,rowH),
+                ("RightAlt","Alt",10,1.25,rowH),("RWin","Win",11.25,1.25,rowH),("Apps","Menu",12.5,1.25,rowH),("RightCtrl","Ctrl",13.75,1.25,rowH),
+                ("Left","←",15.5,1,rowH),("Down","↓",16.5,1,rowH),("Right","→",17.5,1,rowH),
+                ("NumPad0","0",19,2,rowH),("Decimal",".",21,1,rowH)
+            ]
         ];
 
-        foreach (var r in layout)
+        for (int rIdx = 0; rIdx < layout.Length; rIdx++)
         {
             var row = new ObservableCollection<KeyTileState>();
-            foreach (var (code, label, w) in r) row.Add(new KeyTileState(code, label, w));
+            double y = rowY[rIdx];
+            foreach (var (code, label, col, units, h) in layout[rIdx])
+            {
+                var tile = new KeyTileState(code, label, col * pitch, y, units * pitch - gap, h);
+                row.Add(tile);
+                KeyboardKeys.Add(tile);
+            }
             KeyboardRows.Add(row);
         }
+        TotalKeyCount = KeyboardKeys.Count;
     }
 
     private void InitPhysicalChecklist()

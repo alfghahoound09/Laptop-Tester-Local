@@ -28,9 +28,17 @@ public sealed class DeviceHubViewModelTests
         using (vm)
         {
             Assert.Equal(6, vm.KeyboardRows.Count);
-            var tiles = vm.KeyboardRows.SelectMany(r => r).ToList();
+            Assert.Equal(104, vm.TotalKeyCount);
+            Assert.Equal(104, vm.KeyboardKeys.Count);
+
+            var tiles = vm.KeyboardKeys.ToList();
             Assert.Equal(tiles.Count, tiles.Select(t => t.Code).Distinct(StringComparer.OrdinalIgnoreCase).Count());
-            Assert.All(tiles, t => Assert.NotNull(t.KeyValue));
+            Assert.All(tiles, t =>
+            {
+                Assert.NotNull(t.KeyValue);
+                Assert.True(t.Width > 0);
+                Assert.True(t.Height > 0);
+            });
 
             foreach (var tile in tiles)
             {
@@ -44,7 +52,7 @@ public sealed class DeviceHubViewModelTests
                 Assert.True(tile.IsTested);
             }
 
-            Assert.Equal(tiles.Count, vm.TestedKeyCount);
+            Assert.Equal(104, vm.TestedKeyCount);
 
             vm.ResetKeyboardCommand.Execute(null);
             Assert.Equal(0, vm.TestedKeyCount);
@@ -54,13 +62,64 @@ public sealed class DeviceHubViewModelTests
                 Assert.False(t.IsTested);
             });
 
-            // Both "Enter" and "Return" hit the Enter key tile
-            vm.RecordKeyEvent("Enter", isDown: true);
+            // Main Enter vs Numpad Enter extended-key disambiguation + compatibility with Enter alias
             var enterTile = tiles.Single(t => t.Code == "Return");
+            var numEnterTile = tiles.Single(t => t.Code == "Enter");
+
+            vm.RecordKeyEvent("Return", isDown: true, isExtended: false);
+            Assert.True(enterTile.IsTested);
+            Assert.False(numEnterTile.IsTested);
+
+            vm.RecordKeyEvent("Return", isDown: true, isExtended: true);
+            Assert.True(numEnterTile.IsTested);
+
+            vm.ResetKeyboardCommand.Execute(null);
+            vm.RecordKeyEvent("Enter", isDown: true);
             Assert.True(enterTile.IsTested);
             vm.ResetKeyboardCommand.Execute(null);
             vm.RecordKeyEvent("Return", isDown: true);
             Assert.True(enterTile.IsTested);
+        }
+    }
+
+    [Fact]
+    public void MarkDeviceResult_ImmediatelyUpdatesStatusPropertiesAcrossAllTests()
+    {
+        var (vm, _) = CreateSut();
+        using (vm)
+        {
+            Assert.Equal(TestStatus.Pending, vm.KeyboardStatus);
+            Assert.Equal(TestStatus.Pending, vm.DisplayStatus);
+            Assert.Equal(TestStatus.Pending, vm.AudioHubStatus);
+
+            vm.MarkDeviceResultCommand.Execute("keyboard|Keyboard Key Test|Input|Pass");
+            vm.MarkDeviceResultCommand.Execute("display|Screen & Dead Pixel Check|Display|Pass");
+            vm.MarkDeviceResultCommand.Execute("touchpad|Touchpad & Pointer|Input|Pass");
+            vm.MarkDeviceResultCommand.Execute("speaker|Stereo Speakers|Audio|Pass");
+            Assert.Equal(TestStatus.Warning, vm.AudioHubStatus); // Speaker passed, Mic pending
+
+            vm.MarkDeviceResultCommand.Execute("microphone|Microphone Recording|Audio|Pass");
+            vm.MarkDeviceResultCommand.Execute("usb|USB Ports|Connectivity|Pass");
+            vm.MarkDeviceResultCommand.Execute("connectivity|USB, Wi-Fi & Bluetooth|Connectivity|Pass");
+            vm.MarkDeviceResultCommand.Execute("camera|Webcam Preview|Input|Pass");
+            vm.MarkDeviceResultCommand.Execute("charger|AC Charger & Power|Power|Pass");
+            vm.MarkDeviceResultCommand.Execute("physical|Physical Body & Hinges|Physical|Pass");
+
+            Assert.Equal(TestStatus.Passed, vm.KeyboardStatus);
+            Assert.Equal(TestStatus.Passed, vm.DisplayStatus);
+            Assert.Equal(TestStatus.Passed, vm.TouchpadStatus);
+            Assert.Equal(TestStatus.Passed, vm.SpeakerStatus);
+            Assert.Equal(TestStatus.Passed, vm.MicrophoneStatus);
+            Assert.Equal(TestStatus.Passed, vm.AudioHubStatus);
+            Assert.Equal(TestStatus.Passed, vm.UsbStatus);
+            Assert.Equal(TestStatus.Passed, vm.ConnectivityStatus);
+            Assert.Equal(TestStatus.Passed, vm.CameraStatus);
+            Assert.Equal(TestStatus.Passed, vm.ChargerStatus);
+            Assert.Equal(TestStatus.Passed, vm.PhysicalStatus);
+
+            vm.MarkDeviceResultCommand.Execute("microphone|Microphone Recording|Audio|Fail");
+            Assert.Equal(TestStatus.Failed, vm.MicrophoneStatus);
+            Assert.Equal(TestStatus.Failed, vm.AudioHubStatus);
         }
     }
 

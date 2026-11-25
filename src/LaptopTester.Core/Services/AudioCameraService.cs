@@ -5,6 +5,13 @@ namespace LaptopTester.Core.Services;
 
 public sealed record AudioDeviceSummary(int OutputDeviceCount, string PrimaryOutputName, int InputDeviceCount, string PrimaryInputName);
 
+public sealed record AcousticLoopbackResult(
+    bool OutputPresent,
+    bool InputPresent,
+    double PeakNormalizedRms,
+    bool LoopbackDetected,
+    string Summary);
+
 /// <summary>Synthesizes stereo test WAVs, records live microphone PCM via winmm.dll, and enumerates cameras.</summary>
 public sealed class AudioCameraService : IDisposable
 {
@@ -253,6 +260,65 @@ public sealed class AudioCameraService : IDisposable
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
             .ToList();
+    }
+
+    /// <summary>Plays a brief tone while listening on the default microphone to auto-verify speaker and mic hardware.</summary>
+    public async Task<AcousticLoopbackResult> RunAcousticLoopbackTestAsync(
+        double chimeDurationSec = 0.75,
+        double thresholdNormalizedRms = 0.08,
+        CancellationToken ct = default)
+    {
+        var summary = GetAudioDevices();
+        bool outOk = summary.OutputDeviceCount > 0;
+        bool inOk = summary.InputDeviceCount > 0;
+        if (!outOk || !inOk)
+        {
+            return new AcousticLoopbackResult(
+                outOk,
+                inOk,
+                0,
+                false,
+                !outOk && !inOk
+                    ? "No speakers or microphone devices detected"
+                    : !outOk
+                        ? "No speaker output device detected"
+                        : "No microphone input device detected");
+        }
+
+        double peakRms = 0;
+        bool micStarted = false;
+
+        void Handler(object? _, double level)
+        {
+            if (level > peakRms) peakRms = level;
+        }
+
+        MicrophoneLevelMeasured += Handler;
+        try
+        {
+            micStarted = StartMicrophoneRecording();
+            if (!micStarted)
+            {
+                return new AcousticLoopbackResult(true, false, 0, false,
+                    "Microphone capture could not open (in use or permission blocked)");
+            }
+
+            await Task.Delay(120, ct);
+            PlayStereoTest(left: true, right: true, freqHz: 880, durationSec: chimeDurationSec);
+            await Task.Delay((int)(chimeDurationSec * 1000) + 150, ct);
+
+            bool detected = peakRms >= thresholdNormalizedRms;
+            string note = detected
+                ? $"Acoustic loopback verified speaker + mic (peak {Math.Round(peakRms * 100):F0}%)"
+                : $"Tone played but mic heard low/no signal ({Math.Round(peakRms * 100):F0}%) — confirm manually if muted/headphones";
+            return new AcousticLoopbackResult(true, true, Math.Round(peakRms, 3), detected, note);
+        }
+        finally
+        {
+            MicrophoneLevelMeasured -= Handler;
+            StopPlayback();
+            if (micStarted) StopMicrophoneRecording();
+        }
     }
 
     internal static double ComputeNormalizedRms(byte[] pcm16)

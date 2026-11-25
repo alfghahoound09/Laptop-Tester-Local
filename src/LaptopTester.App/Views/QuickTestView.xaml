@@ -47,6 +47,96 @@
                 </Grid>
             </Border>
 
+            <!-- Hybrid Queue Options & Live Pipeline Status -->
+            <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,14" Padding="14,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="HYBRID PRIORITY QUEUE (P1 HARDWARE -> P2 STORAGE -> P3 BATTERY -> P4-P7 SENSORS/AUDIO -> P8-P10 INPUT)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding HybridQueueStatus}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                        <CheckBox Content="1s Auto Audio Loopback" IsChecked="{Binding EnableAcousticLoopback}" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,16,0"/>
+                        <CheckBox Content="Fail-Fast on Critical Fault" IsChecked="{Binding StopOnCriticalFailure}" Style="{StaticResource DarkCheckBoxStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Fail-Fast Critical Alert Banner -->
+            <Border Background="{StaticResource StatusFailBgBrush}" BorderBrush="{StaticResource StatusFailBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14"
+                    Visibility="{Binding HasCriticalAbort, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock Text="CRITICAL HARDWARE OR STORAGE FAULT DETECTED" FontSize="11" FontWeight="Bold" Foreground="{StaticResource StatusFailBrush}"/>
+                        <TextBlock Text="{Binding CriticalAbortMessage}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Continue Remaining Checks" Command="{Binding ContinueAfterAbortCommand}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Inline Express Interactive Queue (Display -> Touchpad -> Keyboard) -->
+            <Border Style="{StaticResource AccentCardBorderStyle}" Margin="0,0,0,14"
+                    Visibility="{Binding ActiveInteractiveStepId, Converter={StaticResource NullToVis}}">
+                <StackPanel>
+                    <TextBlock Text="{Binding ActiveInteractiveTitle}" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding ActiveInteractivePrompt}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <!-- Express Display Check -->
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding ActiveInteractiveStepId, Converter={StaticResource EqVis}, ConverterParameter=display}">
+                        <Button Content="Launch Color Flash Check (P=Pass / F=Fail)" Command="{Binding LaunchExpressDisplayCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Pass" Command="{Binding SetStepStatusCommand}" CommandParameter="display|Pass" Style="{StaticResource PassActionButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Fail" Command="{Binding SetStepStatusCommand}" CommandParameter="display|Fail" Style="{StaticResource FailActionButtonStyle}"/>
+                    </StackPanel>
+
+                    <!-- Express Touchpad Micro-Pad (Move + Click + Scroll = Auto Pass) -->
+                    <Grid Visibility="{Binding ActiveInteractiveStepId, Converter={StaticResource EqVis}, ConverterParameter=touchpad}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource BgPrimaryBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Height="74" Padding="14"
+                                MouseMove="QuickTouchPad_MouseMove" MouseDown="QuickTouchPad_MouseDown" MouseWheel="QuickTouchPad_MouseWheel">
+                            <Grid>
+                                <TextBlock Text="Swipe pointer here, click once, and scroll once to auto-pass" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <CheckBox Content="Move" IsChecked="{Binding QuickTouchMoved, Mode=OneWay}" IsHitTestVisible="False" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,12,0"/>
+                                    <CheckBox Content="Click" IsChecked="{Binding QuickTouchClicked, Mode=OneWay}" IsHitTestVisible="False" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,12,0"/>
+                                    <CheckBox Content="Scroll" IsChecked="{Binding QuickTouchScrolled, Mode=OneWay}" IsHitTestVisible="False" Style="{StaticResource DarkCheckBoxStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                            <Button Content="Fail" Command="{Binding SetStepStatusCommand}" CommandParameter="touchpad|Fail" Style="{StaticResource FailActionButtonStyle}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Express Keyboard 6-Key Quick Sweep -->
+                    <Grid Visibility="{Binding ActiveInteractiveStepId, Converter={StaticResource EqVis}, ConverterParameter=keyboard}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,12,0">
+                                <TextBlock Text="{Binding QuickKeysCount, StringFormat='{}Verified: {0} / 6 keys'}" FontFamily="{StaticResource MonoFontFamily}" FontWeight="Bold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                            </Border>
+                            <TextBlock Text="{Binding QuickKeyLastLabel}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Open Full 104-Key Test" Command="{Binding OpenFullKeyboardTestCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                            <Button Content="Fail" Command="{Binding SetStepStatusCommand}" CommandParameter="keyboard|Fail" Style="{StaticResource FailActionButtonStyle}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- 10 Steps List -->
             <ItemsControl ItemsSource="{Binding Steps}">
                 <ItemsControl.ItemTemplate>
@@ -73,8 +163,14 @@
 
                                 <StackPanel Grid.Column="1" Margin="12,0,16,0" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
+                                        <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Priority, StringFormat='{}P{0}'}" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </Border>
                                         <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"/>
-                                        <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding KindLabel}" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
+                                        </Border>
+                                        <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="6,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Weight, StringFormat='-{0} pts'}" FontSize="11" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}"/>
                                         </Border>
                                     </StackPanel>
@@ -90,11 +186,13 @@
                                     <Button Content="{Binding DataContext.PassLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             Command="{Binding DataContext.SetStepStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding Id, StringFormat='{}{0}|Pass'}"
-                                            Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" MinHeight="30" Margin="0,0,6,0"/>
+                                            Tag="{Binding Status}"
+                                            Style="{StaticResource PassActionButtonStyle}" Padding="10,5" MinHeight="30" Margin="0,0,6,0"/>
                                     <Button Content="{Binding DataContext.FailLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             Command="{Binding DataContext.SetStepStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding Id, StringFormat='{}{0}|Fail'}"
-                                            Style="{StaticResource DangerButtonStyle}" Padding="10,5" MinHeight="30" Margin="0,0,6,0"/>
+                                            Tag="{Binding Status}"
+                                            Style="{StaticResource FailActionButtonStyle}" Padding="10,5" MinHeight="30" Margin="0,0,6,0"/>
                                     <Button Content="{Binding DataContext.SkipLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             Command="{Binding DataContext.SetStepStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding Id, StringFormat='{}{0}|Skip'}"

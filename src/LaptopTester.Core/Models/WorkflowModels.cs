@@ -47,3 +47,19 @@ public sealed record QuickTestSession(
     IReadOnlyList<TestResultEntry> Results,
     IReadOnlyList<ScoreDeduction> Deductions,
     string Notes);
+
+public enum QuickTestRoundKind
+{
+    Automated,
+    HybridAuto,
+    Interactive
+}
+
+/// <summary>Variable Quick Test round descriptor ordered inside a PriorityQueue.</summary>
+public sealed record QuickTestRound(
+    string StepId,
+    string Title,
+    int Priority,
+    int Weight,
+    QuickTestRoundKind Kind,
+    bool IsCriticalFail);

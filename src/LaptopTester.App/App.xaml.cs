@@ -30,13 +30,14 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
         mainWindow.Show();
 
         if (verifyMode)
         {
             try
             {
-                await RunVisualVerificationAsync(mainWindow, _serviceProvider.GetRequiredService<MainViewModel>(), e.Args[1]);
+                await RunVisualVerificationAsync(mainWindow, mainViewModel, e.Args[1]);
             }
             catch (Exception ex)
             {
@@ -44,6 +45,11 @@ public partial class App : Application
                 File.WriteAllText(Path.Combine(e.Args[1], "verify_error.txt"), ex.ToString());
             }
             Shutdown(0);
+        }
+        else
+        {
+            _serviceProvider.GetRequiredService<GitHubUpdateService>().CleanupOldUpdateDownloads();
+            _ = mainViewModel.CheckForUpdateInBackgroundAsync();
         }
     }
 
@@ -70,9 +76,17 @@ public partial class App : Application
         await SaveWindowRenderAsync(win, Path.Combine(outDir, "04_battery.png"));
 
         vm.Navigate(AppTab.Devices);
+        vm.Devices.SelectSection("Hub");
+        await Task.Delay(250);
+        await SaveWindowRenderAsync(win, Path.Combine(outDir, "07_devices_hub.png"));
+
         vm.Devices.SelectSection("Keyboard");
         await Task.Delay(350);
         await SaveWindowRenderAsync(win, Path.Combine(outDir, "05_keyboard.png"));
+
+        vm.Navigate(AppTab.Settings);
+        await Task.Delay(250);
+        await SaveWindowRenderAsync(win, Path.Combine(outDir, "06_settings.png"));
     }
 
     private static async Task SaveWindowRenderAsync(Window win, string path)
@@ -106,6 +120,7 @@ public partial class App : Application
         services.AddSingleton<SystemAuditService>();
         services.AddSingleton<QuickTestEngine>();
         services.AddSingleton<HistoryReportService>();
+        services.AddSingleton<GitHubUpdateService>();
 
         services.AddSingleton<DashboardViewModel>();
         services.AddSingleton<HardwareHubViewModel>();

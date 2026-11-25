@@ -1,8 +1,8 @@
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
 #endif
 #ifndef FileVersion
-  #define FileVersion "1.0.0.0"
+  #define FileVersion "1.0.1.0"
 #endif
 #ifndef PublishDir
   #define PublishDir "..\publish\win-x64-installer"

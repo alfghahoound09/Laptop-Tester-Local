@@ -19,6 +19,31 @@ public sealed class QuickTestEngineTests
     }
 
     [Fact]
+    public void BuildRoundQueue_DequeuesDefaultAndVariablePrioritiesInOrder()
+    {
+        Assert.Equal(10, QuickTestEngine.DefaultHybridRounds.Count);
+        Assert.Equal(100, QuickTestEngine.DefaultHybridRounds.Sum(r => r.Weight));
+
+        var q = QuickTestEngine.BuildRoundQueue();
+        var ids = new List<string>();
+        while (q.TryDequeue(out var r, out _)) ids.Add(r.StepId);
+
+        Assert.Equal(["hardware", "storage", "battery", "connectivity", "camera", "speaker", "microphone", "display", "touchpad", "keyboard"], ids);
+
+        // Variable queue priorities can be customized per run
+        var custom = new[]
+        {
+            new QuickTestRound("battery", "Bat", 3, 14, QuickTestRoundKind.Automated, false),
+            new QuickTestRound("storage", "Sto", 1, 14, QuickTestRoundKind.Automated, true),
+            new QuickTestRound("hardware", "Hw", 2, 18, QuickTestRoundKind.Automated, true)
+        };
+        var cq = QuickTestEngine.BuildRoundQueue(custom);
+        var customIds = new List<string>();
+        while (cq.TryDequeue(out var r, out _)) customIds.Add(r.StepId);
+        Assert.Equal(["storage", "hardware", "battery"], customIds);
+    }
+
+    [Fact]
     public void Evaluate_EmptyAndAllPassed_Score100Good()
     {
         var empty = _engine.Evaluate([]);

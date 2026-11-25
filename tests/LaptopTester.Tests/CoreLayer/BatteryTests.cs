@@ -69,7 +69,196 @@ public sealed class BatteryTests
         else
         {
             Assert.Equal(0, info.ChargePercent);
+            Assert.Equal("N/A", info.CycleDisplay);
+            Assert.Equal("No Battery", info.CycleSource);
         }
+    }
+
+    [Fact]
+    public void SanitizeUint_FiltersSentinelsAndOutOfRangeValues()
+    {
+        Assert.Equal(0, BatteryService.SanitizeUint(0, 100_000));
+        Assert.Equal(245, BatteryService.SanitizeUint(245, 100_000));
+        Assert.Equal(0, BatteryService.SanitizeUint(0xFFFFFFFFuL, 100_000));
+        Assert.Equal(0, BatteryService.SanitizeUint(250_000, 100_000));
+    }
+
+    [Fact]
+    public void CorrelateWmiBatteries_AggregatesDualBatteriesAndFiltersSentinels()
+    {
+        var staticRows = new List<Dictionary<string, object?>>
+        {
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\1",
+                ["DesignedCapacity"] = 45_000u,
+                ["ManufactureName"] = "SMP",
+                ["SerialNumber"] = "BAT-01",
+            },
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\2",
+                ["DesignedCapacity"] = 24_000u,
+                ["ManufactureName"] = "SMP",
+                ["SerialNumber"] = "BAT-02",
+            },
+        };
+        var fullRows = new List<Dictionary<string, object?>>
+        {
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\1",
+                ["FullChargedCapacity"] = 40_000u,
+            },
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\2",
+                ["FullChargedCapacity"] = 20_000u,
+            },
+        };
+        var cycleRows = new List<Dictionary<string, object?>>
+        {
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\1",
+                ["CycleCount"] = 120u,
+            },
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\2",
+                ["CycleCount"] = 0xFFFFFFFFu,
+            },
+        };
+        var statusRows = new List<Dictionary<string, object?>>
+        {
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\1",
+                ["RemainingCapacity"] = 30_000u,
+                ["Voltage"] = 11_400u,
+                ["DischargeRate"] = 12_000u,
+                ["ChargeRate"] = 0u,
+                ["Charging"] = false,
+                ["PowerOnline"] = true,
+            },
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["InstanceName"] = @"ACPI\PNP0C0A\2",
+                ["RemainingCapacity"] = 15_000u,
+                ["Voltage"] = 11_200u,
+                ["DischargeRate"] = 0u,
+                ["ChargeRate"] = 5_000u,
+                ["Charging"] = true,
+                ["PowerOnline"] = false,
+            },
+        };
+
+        var result = BatteryService.CorrelateWmiBatteries(staticRows, fullRows, cycleRows, statusRows);
+
+        Assert.Equal(69_000, result.DesignedMwh);
+        Assert.Equal(60_000, result.FullChargedMwh);
+        Assert.Equal(45_000, result.RemainingMwh);
+        Assert.Equal(120, result.CycleCount);
+        Assert.Equal(12_000, result.TotalDischargeMw);
+        Assert.Equal(5_000, result.TotalChargeMw);
+        Assert.True(result.AnyCharging);
+        Assert.True(result.AnyPowerOnline);
+        Assert.Equal("SMP", result.Manufacturer);
+        Assert.Contains("BAT-01", result.SerialNumber);
+    }
+
+    [Fact]
+    public void ParseBatteryReportXml_ExtractsReportedCyclesAndMetadata()
+    {
+        const string xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <BatteryReport xmlns="http://schemas.microsoft.com/battery/2012">
+              <Batteries>
+                <Battery>
+                  <Manufacturer>LGC</Manufacturer>
+                  <SerialNumber>4209</SerialNumber>
+                  <ManufactureDate>2024-03-15</ManufactureDate>
+                  <DesignCapacity>50000</DesignCapacity>
+                  <FullChargeCapacity>44000</FullChargeCapacity>
+                  <CycleCount>84</CycleCount>
+                </Battery>
+              </Batteries>
+              <History>
+                <HistoryEntry StartDate="2024-06-01" EndDate="2024-06-08" FullChargeCapacity="48000" DesignCapacity="50000" CycleCount="20" />
+                <HistoryEntry StartDate="2025-01-01" EndDate="2025-01-08" FullChargeCapacity="44000" DesignCapacity="50000" CycleCount="84" />
+              </History>
+            </BatteryReport>
+            """;
+
+        var report = BatteryService.ParseBatteryReportXml(xml);
+
+        Assert.NotNull(report);
+        Assert.Equal(84, report.ReportedCycleCount);
+        Assert.Equal(50_000, report.DesignedCapacityMwh);
+        Assert.Equal(44_000, report.FullChargedCapacityMwh);
+        Assert.Equal("LGC", report.Manufacturer);
+        Assert.Equal("4209", report.SerialNumber);
+        Assert.Equal("2024-03-15", report.ManufactureDate);
+        Assert.Equal("OS History: 96% -> 88%", report.HistoryTrendNote);
+    }
+
+    [Fact]
+    public void ParseBatteryReportXml_EstimatesCyclesWhenReportedCountMissing()
+    {
+        const string xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <BatteryReport xmlns="http://schemas.microsoft.com/battery/2012">
+              <Batteries>
+                <Battery>
+                  <Manufacturer>Celxpert</Manufacturer>
+                  <DesignCapacity>50000</DesignCapacity>
+                  <FullChargeCapacity>45000</FullChargeCapacity>
+                  <CycleCount>-</CycleCount>
+                </Battery>
+              </Batteries>
+              <History>
+                <HistoryEntry StartDate="2025-01-01" EndDate="2025-01-08" FullChargeCapacity="47000" ActiveEnergyDrain="80000" ConnectedStandbyEnergyDrain="20000" />
+                <HistoryEntry StartDate="2025-01-08" EndDate="2025-01-15" FullChargeCapacity="45000" ActiveEnergyDrain="45000" ConnectedStandbyEnergyDrain="5000" />
+              </History>
+            </BatteryReport>
+            """;
+
+        var report = BatteryService.ParseBatteryReportXml(xml);
+
+        Assert.NotNull(report);
+        Assert.Equal(0, report.ReportedCycleCount);
+        Assert.Equal(3, report.EstimatedCycleCount);
+        Assert.Equal("OS History: 94% -> 90%", report.HistoryTrendNote);
+    }
+
+    [Fact]
+    public void ParseBatteryReportXml_HandlesMalformedInputGracefully()
+    {
+        Assert.Null(BatteryService.ParseBatteryReportXml(""));
+        Assert.Null(BatteryService.ParseBatteryReportXml("<broken"));
+    }
+
+    [Fact]
+    public void BuildLifecycleNote_DetectsConservationModeAndEstimatedCycles()
+    {
+        var acHeld = BatteryService.BuildLifecycleNote(
+            hasBattery: true, isAc: true, isCharging: false, chargePercent: 80,
+            rateWatts: 0.0, healthPercent: 92.0, isEstimatedCycles: false,
+            historyTrend: null, cycleCount: 45);
+        Assert.Contains("80%", acHeld);
+
+        var estimated = BatteryService.BuildLifecycleNote(
+            hasBattery: true, isAc: false, isCharging: false, chargePercent: 60,
+            rateWatts: 14.5, healthPercent: 88.0, isEstimatedCycles: true,
+            historyTrend: "OS History: 96% -> 88%", cycleCount: 30);
+        Assert.Contains("estimated (~30)", estimated, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("OS History: 96% -> 88%", estimated);
+
+        var desktop = BatteryService.BuildLifecycleNote(
+            hasBattery: false, isAc: true, isCharging: false, chargePercent: 0,
+            rateWatts: 0.0, healthPercent: 0.0, isEstimatedCycles: false,
+            historyTrend: null, cycleCount: 0);
+        Assert.Equal("No battery installed", desktop);
     }
 
     [Fact]

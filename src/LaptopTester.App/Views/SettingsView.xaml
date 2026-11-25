@@ -5,6 +5,87 @@
         <StackPanel>
             <TextBlock Text="{Binding TitleText}" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,16"/>
 
+            <!-- Software Updates (GitHub Remote In-Place Updater) -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <TextBlock Text="SOFTWARE UPDATES (GITHUB REMOTE)" Style="{StaticResource SectionEyebrowStyle}" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                                <TextBlock Text="{Binding CurrentVersionText}" FontFamily="{StaticResource MonoFontFamily}" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                            </Border>
+                            <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3">
+                                <TextBlock Text="{Binding InstallModeBadge}" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Check GitHub Releases and apply updates automatically (with SHA-256 verification) without manually downloading or running the installer."
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="19"/>
+
+                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="{Binding UpdateStatusText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,160,0"/>
+                                <TextBlock Text="{Binding LastCheckedText, StringFormat='{}Last checked: {0}'}" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                            <ProgressBar Value="{Binding UpdateDownloadPercent}" Maximum="100"
+                                         Style="{StaticResource OrangeProgressBarStyle}"
+                                         Margin="0,10,0,0"
+                                         Visibility="{Binding IsDownloadingUpdate, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Button Content="Check for Updates"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                IsEnabled="{Binding IsUpdateIdle}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+                        <Button Content="Update &amp; Restart Now"
+                                Command="{Binding InstallUpdateCommand}"
+                                IsEnabled="{Binding CanInstallUpdate}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+                        <Button Content="View Releases on GitHub"
+                                Command="{Binding OpenReleasePageCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"/>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource AccentCardBorderStyle}" Margin="0,0,0,14"
+                            Visibility="{Binding UpdateReleaseNotes, Converter={StaticResource NullToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding AvailableUpdateTag, StringFormat='{}RELEASE NOTES ({0})'}" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding UpdateReleaseNotes}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19"/>
+                        </StackPanel>
+                    </Border>
+
+                    <CheckBox Content="Automatically check GitHub for updates when LaptopTester opens"
+                              IsChecked="{Binding AutoCheckUpdates}"
+                              Style="{StaticResource DarkCheckBoxStyle}"
+                              Margin="0,0,0,12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="Optional GitHub Token (only needed if the repository is private or rate-limited)"
+                                       FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding GitHubTokenInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource DarkTextBoxStyle}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
+                                     ToolTip="Optional GitHub Personal Access Token (leave blank for public releases)"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Save Token"
+                                Command="{Binding SaveTokenCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                VerticalAlignment="Bottom"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                 <StackPanel>
                     <TextBlock Text="{Binding PrivilegeHeader}" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>

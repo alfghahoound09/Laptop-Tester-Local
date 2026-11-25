@@ -10,6 +10,12 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _vm;
 
+    private const int WmKeyDown = 0x0100;
+    private const int WmKeyUp = 0x0101;
+    private const int WmSysKeyDown = 0x0104;
+    private const int WmSysKeyUp = 0x0105;
+    private bool _lastKeyExtended;
+
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
@@ -24,6 +30,13 @@ public partial class MainWindow : Window
         {
             var win = new FullScreenTestWindow(mode) { Owner = this };
             win.ShowDialog();
+        };
+
+        vm.QuickTest.LaunchExpressDisplayRequested += onVerdict =>
+        {
+            var win = new FullScreenTestWindow("Solid", expressConfirmMode: true) { Owner = this };
+            win.ShowDialog();
+            onVerdict(win.ExpressVerdict);
         };
     }
 
@@ -41,8 +54,17 @@ public partial class MainWindow : Window
 
             int borderColor = 0x00302626; // COLORREF BGR for #262630
             DwmSetWindowAttribute(hwnd, 34 /* DWMWA_BORDER_COLOR */, ref borderColor, sizeof(int));
+
+            HwndSource.FromHwnd(hwnd)?.AddHook(OnWindowMessage);
         }
         catch { }
+    }
+
+    private IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg is WmKeyDown or WmKeyUp or WmSysKeyDown or WmSysKeyUp)
+            _lastKeyExtended = ((lParam.ToInt64() >> 24) & 1) != 0;
+        return IntPtr.Zero;
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
@@ -71,14 +93,29 @@ public partial class MainWindow : Window
     private bool IsKeyboardTestActive =>
         _vm.ActiveTab == AppTab.Devices && _vm.Devices.ActiveSection == "Keyboard";
 
+    private bool IsQuickKeyboardActive =>
+        _vm.ActiveTab == AppTab.QuickTest
+        && _vm.QuickTest.ActiveInteractiveStepId.Equals("keyboard", StringComparison.OrdinalIgnoreCase);
+
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (IsKeyboardTestActive)
         {
             Key actual = e.Key == Key.System ? e.SystemKey : e.Key;
-            _vm.Devices.RecordKeyEvent(actual.ToString(), true);
+            _vm.Devices.RecordKeyEvent(actual.ToString(), true, _lastKeyExtended);
             e.Handled = true;
             return;
+        }
+
+        if (IsQuickKeyboardActive)
+        {
+            Key actual = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (actual is not (Key.F1 or Key.F2 or Key.F3 or Key.F4 or Key.F5 or Key.F6 or Key.F7))
+            {
+                _vm.QuickTest.RecordQuickKeyPress(actual.ToString());
+                e.Handled = true;
+                return;
+            }
         }
 
         switch (e.Key)
@@ -97,7 +134,7 @@ public partial class MainWindow : Window
     {
         if (!IsKeyboardTestActive) return;
         Key actual = e.Key == Key.System ? e.SystemKey : e.Key;
-        _vm.Devices.RecordKeyEvent(actual.ToString(), false);
+        _vm.Devices.RecordKeyEvent(actual.ToString(), false, _lastKeyExtended);
         e.Handled = true;
     }
 }

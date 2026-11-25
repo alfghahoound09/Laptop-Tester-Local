@@ -73,4 +73,32 @@ public sealed class QuickTestViewModelTests
             Assert.Equal("Keyboard", navTarget);
         }
     }
+
+    [Fact]
+    public void HybridInlineTouchpadAndKeyboard_AutoPassWhenThresholdsAreMet()
+    {
+        var (vm, store, _, dir) = CreateSut();
+        using (dir)
+        {
+            // Mark Priority 8 (display) done so Priority Queue advances from Priority 9 (touchpad) to Priority 10 (keyboard)
+            vm.SetStepStatusCommand.Execute("display|Pass");
+            vm.ActiveInteractiveStepId = "touchpad";
+            vm.RecordQuickTouchpadActivity(moved: true, clicked: false, scrolled: false);
+            Assert.Equal(TestStatus.Pending, vm.Steps.First(s => s.Id == "touchpad").Status);
+
+            vm.RecordQuickTouchpadActivity(moved: false, clicked: true, scrolled: true);
+            Assert.Equal(TestStatus.Passed, store.Get("touchpad")?.Status);
+            Assert.Equal(TestStatus.Passed, vm.Steps.First(s => s.Id == "touchpad").Status);
+            Assert.Equal("keyboard", vm.ActiveInteractiveStepId);
+
+            foreach (string key in new[] { "A", "S", "D", "F", "G" })
+                vm.RecordQuickKeyPress(key);
+            Assert.Equal(5, vm.QuickKeysCount);
+            Assert.Equal(TestStatus.Pending, vm.Steps.First(s => s.Id == "keyboard").Status);
+
+            vm.RecordQuickKeyPress("H");
+            Assert.Equal(TestStatus.Passed, store.Get("keyboard")?.Status);
+            Assert.Equal(TestStatus.Passed, vm.Steps.First(s => s.Id == "keyboard").Status);
+        }
+    }
 }

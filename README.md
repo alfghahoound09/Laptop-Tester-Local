@@ -23,24 +23,17 @@
 - Displays current execution privilege (`Standard User` or `Administrator`) and session check count.
 - Provides one-click shortcuts to Hardware Scan, Battery Health, Anti-Fake Audit, Benchmark, and the Quick Test Wizard.
 
-### 2. Guided 10-Step Quick Test Wizard (`F2`)
-- Evaluates laptops on a weighted **100-point scale** across 10 diagnostic steps:
-  1. Hardware & Anti-Fake (`18` pts)
-  2. Storage & SMART Health (`14` pts)
-  3. Battery & Real Capacity (`14` pts)
-  4. Display & Dead Pixels (`12` pts)
-  5. Keyboard (`10` pts)
-  6. Touchpad & Pointer (`8` pts)
-  7. Stereo Speakers (`6` pts)
-  8. Microphone Recording (`6` pts)
-  9. Webcam Check (`6` pts)
-  10. USB / Wi-Fi / Bluetooth (`6` pts)
-- Runs automated checks (`Hardware`, `Anti-Fake`, `Storage`, `Battery`, `Connectivity`), links directly to interactive peripheral tests, tracks point deductions, and outputs a purchase verdict (`Good`, `Consider carefully`, or `Do not buy`).
+### 2. Hybrid Priority-Queued Quick Test (`F2`)
+- Evaluates laptops on a weighted **100-point scale** using a configurable **Priority Queue** (`P1` -> `P10`) with minimal user effort:
+  - **Fail-Fast Critical Core (`P1` Hardware & Anti-Fake `18` pts, `P2` Storage & SMART `14` pts):** Runs first and triggers an immediate fail-fast critical alert if specs are spoofed or SMART health fails.
+  - **Automated Power, Connectivity & Sensors (`P3` Battery `14` pts, `P4` USB / Wi-Fi / BT `6` pts, `P5` Webcam `6` pts):** Runs hands-free while reusing the initial hardware snapshot.
+  - **1-Second Hybrid Audio Loopback (`P6` Stereo Speakers `6` pts, `P7` Microphone `6` pts):** Plays a brief `880 Hz` tone and measures mic RMS to auto-pass both speakers and microphone when detected (falling back cleanly to manual verify if muted/headphones).
+  - **Express Inline Micro-Inputs (`P8` Display `12` pts, `P9` Touchpad `8` pts, `P10` Keyboard `10` pts):** Auto-checks driver/stuck-key status, then surfaces one active check at a time directly inside Quick Test (fullscreen color flash with `P`/`F`, inline pointer move+click+scroll auto-pass pad, and 6-key quick sweep).
 
 ### 3. Hardware Hub (`F3`)
 - **Hardware Scan:** Lists CPU architecture/cache, per-slot RAM modules (`Capacity`, `Speed`, `Type`, `Manufacturer`, `PartNumber`), GPUs, physical drives, and connected monitors.
 - **3-Source Anti-Fake Audit:** Cross-checks **Windows/WMI**, **Registry / OS API**, and raw **SMBIOS firmware tables** (`GetSystemFirmwareTable('RSMB')` with `mssmbios\Data` fallback) for CPU name, RAM total, System Model/BIOS, physical storage media (`SSD` vs `HDD` bus truth), and known spoofing process indicators.
-- **Battery Health & Stress Test:** Reads design vs. full-charged capacity (`mWh`), health percentage, cycle count, voltage, and charge/discharge rate (`W`); includes a pre-test checklist and a 30-second multi-core CPU drain stress test.
+- **Battery Health & Stress Test:** Reads design vs. full-charged capacity (`mWh`), health percentage, 4-source charge cycle count (kernel battery IOCTLs, instance-correlated `root\wmi`, SMBIOS Type `22`, and cached `powercfg /batteryreport` XML history/estimation), manufacture date/serial, voltage sag, and charge/discharge rate (`W`); includes conservation-limit notes and a 30-second multi-core CPU drain stress test.
 - **Thermal & Benchmark:** Captures ACPI thermal zones and drive SMART temperatures (where exposed by the board/permissions), runs single-core and multi-core prime CPU benchmarks, measures RAM copy bandwidth (`GB/s`), and optionally includes sequential disk speed.
 - **Storage Speed & System Audit:** Measures `128 MB` sequential read/write throughput (`MB/s`), checks `MSFT_PhysicalDisk` / `MSStorageDriver_FailurePredictStatus`, audits Device Manager error codes (`Win32_PnPEntity`), and lists `Run` / `RunOnce` / Startup folder entries.
 
@@ -56,7 +49,7 @@
 ### 5. Reports, History & Settings (`F5`–`F7`)
 - **Report (`F5`):** Displays consolidated results, score `/100`, deductions, and custom notes; exports **HTML** (print-ready for Print-to-PDF) and **JSON** reports.
 - **History (`F6`):** Persists and manages saved test sessions as JSON under `%LocalAppData%\LaptopTester\history`.
-- **Settings (`F7`):** Displays current permission level (Standard User vs. Administrator for CPU thermal sensors), shows the local saved reports folder, and summarizes tool capabilities.
+- **Settings (`F7`):** Includes **In-App GitHub Updates** (checks `releases/latest`, verifies `SHA256SUMS.txt`, and applies updates automatically without manual reinstalling), shows permission level, and opens the local saved reports folder.
 
 ---
 
@@ -114,6 +107,17 @@ dotnet run --project src/LaptopTester.App/LaptopTester.App.csproj
   # Bump patch version, commit, tag, and push to trigger Release CD
   .\scripts\bump-version.ps1 -Bump patch -Push
   ```
+
+### Built-in In-App Updates (No Manual Reinstall Required)
+
+Users do not need to revisit GitHub or manually re-run installers for future versions:
+
+1. Open **Settings (`F7`)** (or click the **Update** pill in the title bar when a newer release is detected on startup) and click **Check for Updates**.
+2. Review the new release version and release notes, then click **Update & Restart Now**.
+3. LaptopTester downloads the matching release binary over HTTPS, verifies its SHA-256 hash against `SHA256SUMS.txt`, and applies the update automatically:
+   - **Installed App:** Silently patches the existing installation folder in-place and relaunches automatically.
+   - **Portable Single-File `.exe`:** Atomically replaces the running executable in-place and relaunches cleanly.
+4. *(Optional for private repositories)* Enter a read-only GitHub Personal Access Token in **Settings** (saved locally to `%LocalAppData%\LaptopTester\updater.json`) or set `LAPTOPTESTER_GITHUB_TOKEN`.
 
 ---
 

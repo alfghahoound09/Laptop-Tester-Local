@@ -58,7 +58,11 @@ public partial class HardwareHubViewModel : ObservableObject
     public ObservableCollection<SpoofingIndicator> Indicators { get; } = new();
 
     // Battery
-    [ObservableProperty] private BatteryDetails? _battery;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BatteryHealthDisplay))]
+    private BatteryDetails? _battery;
+
+    public string BatteryHealthDisplay => Battery is { HasBattery: true } b ? $"{b.HealthPercent:F0}%" : "N/A";
     [ObservableProperty] private bool _isStressRunning;
     [ObservableProperty] private string _stressStatusText = "";
     [ObservableProperty] private int _stressProgressPercent;
@@ -182,7 +186,7 @@ public partial class HardwareHubViewModel : ObservableObject
             {
                 var st = Battery.HealthPercent is > 0 and < 60 ? TestStatus.Warning : TestStatus.Passed;
                 _store.Upsert("battery", "Battery Health", "Power", st,
-                    $"Health {Battery.HealthPercent:F0}% · {Battery.CycleCount} cycles · {Battery.FullChargedCapacityMwh}/{Battery.DesignedCapacityMwh} mWh");
+                    $"Health {Battery.HealthPercent:F0}% · Cycles {Battery.CycleDisplay} ({Battery.CycleSource}) · {Battery.FullChargedCapacityMwh}/{Battery.DesignedCapacityMwh} mWh");
             }
             else
             {

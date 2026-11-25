@@ -99,6 +99,15 @@
 
                 <!-- Right Titlebar Tools & Win11 Caption Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding OpenUpdateSettingsCommand}"
+                            Visibility="{Binding HasAvailableUpdate, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Height="26" MinHeight="26" Padding="10,2" Margin="0,0,8,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Click to view release details and update directly from GitHub">
+                        <TextBlock Text="{Binding AvailableUpdateLabel}" FontSize="11" FontWeight="SemiBold"/>
+                    </Button>
+
                     <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,8,0" VerticalAlignment="Center"
                             WindowChrome.IsHitTestVisibleInChrome="True">
                         <TextBlock Text="{Binding PrivilegeShortLabel}" FontSize="10.5" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}"/>

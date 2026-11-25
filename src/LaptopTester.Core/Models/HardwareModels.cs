@@ -104,7 +104,12 @@ public sealed record BatteryDetails(
     double RateWatts,
     string Manufacturer,
     string Chemistry,
-    string SerialNumber);
+    string SerialNumber,
+    string CycleDisplay = "0",
+    string CycleSource = "None",
+    bool IsEstimatedCycleCount = false,
+    string ManufactureDate = "N/A",
+    string LifecycleNote = "");
 
 /// <summary>Complete hardware scan report.</summary>
 public sealed record HardwareReport(
