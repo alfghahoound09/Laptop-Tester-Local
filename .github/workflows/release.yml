@@ -149,28 +149,31 @@ jobs:
           gh release view $tag --repo $repo *> $null
           $releaseExists = ($LASTEXITCODE -eq 0)
 
-          if ($releaseExists) {
-            Write-Host "Updating existing GitHub Release $tag assets..."
-            $uploaded = $false
-            for ($attempt = 1; $attempt -le 3; $attempt++) {
-              & gh release upload $tag @files --repo $repo --clobber
-              if ($LASTEXITCODE -eq 0) {
-                $uploaded = $true
-                break
-              }
-              Write-Warning "gh release upload failed (attempt $attempt/3, exit $LASTEXITCODE); retrying..."
-              Start-Sleep -Seconds (3 * $attempt)
-            }
-            if (-not $uploaded) {
-              throw "Failed to upload release assets for $tag after 3 attempts."
-            }
-          }
-          else {
+          if (-not $releaseExists) {
             Write-Host "Creating GitHub Release $tag..."
-            $createArgs = @('release', 'create', $tag) + $files + @('--repo', $repo, '--title', $title, '--generate-notes')
+            $createArgs = @('release', 'create', $tag, '--repo', $repo, '--title', $title, '--generate-notes')
             if ($isPre) { $createArgs += '--prerelease' }
             & gh @createArgs
             if ($LASTEXITCODE -ne 0) {
               throw "Failed to create GitHub Release $tag."
+            }
+          }
+
+          Write-Host "Uploading GitHub Release $tag assets (binaries first, SHA256SUMS.txt last)..."
+          foreach ($file in $files) {
+            $fileName = Split-Path -Leaf $file
+            $uploaded = $false
+            for ($attempt = 1; $attempt -le 5; $attempt++) {
+              Write-Host "Uploading $fileName (attempt $attempt/5)..."
+              & gh release upload $tag $file --repo $repo --clobber
+              if ($LASTEXITCODE -eq 0) {
+                $uploaded = $true
+                break
+              }
+              Write-Warning "Upload failed for $fileName (attempt $attempt/5, exit $LASTEXITCODE); retrying..."
+              Start-Sleep -Seconds (5 * $attempt)
+            }
+            if (-not $uploaded) {
+              throw "Failed to upload $fileName for $tag after 5 attempts."
             }
           }
