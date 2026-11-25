@@ -12,7 +12,9 @@ public sealed record ReleaseAssetInfo(
     string Name,
     string BrowserDownloadUrl,
     string ApiDownloadUrl,
-    long SizeBytes);
+    long SizeBytes,
+    DateTimeOffset? UpdatedAt = null,
+    string? Digest = null);
 
 /// <summary>Parsed metadata and assets for a published GitHub Release.</summary>
 public sealed record GitHubReleaseInfo(
@@ -25,7 +27,15 @@ public sealed record GitHubReleaseInfo(
     bool IsPrerelease,
     IReadOnlyList<ReleaseAssetInfo> Assets);
 
-/// <summary>Result of checking the remote GitHub repository for a newer release.</summary>
+/// <summary>Parsed SHA256SUMS.txt content including optional commit SHA and per-binary SHA-256 headers.</summary>
+public sealed record ReleaseChecksumManifest(
+    IReadOnlyDictionary<string, string> FileHashes,
+    string? CommitSha,
+    DateTimeOffset? BuiltAtUtc,
+    string? AppExeSha256,
+    string? PortableExeSha256);
+
+/// <summary>Result of checking the remote GitHub repository for a newer release or same-version hotfix.</summary>
 public sealed record UpdateCheckResult(
     bool IsUpdateAvailable,
     string CurrentVersion,
@@ -34,7 +44,10 @@ public sealed record UpdateCheckResult(
     ReleaseAssetInfo? PrimaryAsset,
     ReleaseAssetInfo? ChecksumAsset,
     string StatusMessage,
-    string? ErrorDetail = null);
+    string? ErrorDetail = null,
+    bool IsSameVersionHotfix = false,
+    string? RemoteCommitSha = null,
+    string? RemoteAssetSha256 = null);
 
 /// <summary>Streaming download progress while fetching an update package.</summary>
 public sealed record UpdateDownloadProgress(
@@ -58,4 +71,6 @@ public sealed class UpdaterSettings
     public bool AutoCheckOnStartup { get; set; } = true;
     public string? GitHubToken { get; set; }
     public DateTimeOffset? LastCheckedAt { get; set; }
+    public string? InstalledHotfixCommit { get; set; }
+    public string? InstalledHotfixSha256 { get; set; }
 }

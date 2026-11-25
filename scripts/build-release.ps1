@@ -22,6 +22,16 @@ if ($Version -notmatch '^(\d+)\.(\d+)\.(\d+)') {
     throw "Version '$Version' must start with Major.Minor.Patch"
 }
 $assemblyVer = "$($Matches[1]).$($Matches[2]).$($Matches[3]).0"
+$commitSha = ''
+try {
+    $gitSha = (& git -C $repoRoot rev-parse HEAD 2>$null)
+    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($gitSha)) {
+        $commitSha = $gitSha.Trim()
+    }
+}
+catch { }
+$builtAtUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+$sourceRevProps = if (-not [string]::IsNullOrWhiteSpace($commitSha)) { @("-p:SourceRevisionId=$commitSha") } else { @() }
 
 $publishRoot = Join-Path $repoRoot 'publish'
 $portableDir = Join-Path $publishRoot "$Runtime-portable"
@@ -52,6 +62,7 @@ dotnet publish $appProj `
     -p:Version=$Version `
     -p:AssemblyVersion=$assemblyVer `
     -p:FileVersion=$assemblyVer `
+    @sourceRevProps `
     -o $portableDir
 if ($LASTEXITCODE -ne 0) { throw "Portable publish failed." }
 
@@ -90,6 +101,7 @@ if (-not $SkipInstaller) {
             -p:Version=$Version `
             -p:AssemblyVersion=$assemblyVer `
             -p:FileVersion=$assemblyVer `
+            @sourceRevProps `
             -o $installerInputDir
         if ($LASTEXITCODE -ne 0) { throw "Installer payload publish failed." }
 
@@ -102,13 +114,30 @@ if (-not $SkipInstaller) {
     }
 }
 
-# 3. Generate SHA256SUMS.txt
+# 3. Generate SHA256SUMS.txt (with commit SHA & binary SHA-256 metadata headers for same-version hotfix checks)
 $checksumPath = Join-Path $distDir 'SHA256SUMS.txt'
 $artifacts = Get-ChildItem -Path $distDir -Filter '*.exe' | Sort-Object Name
-$lines = foreach ($file in $artifacts) {
+$headerLines = [System.Collections.Generic.List[string]]::new()
+$headerLines.Add("# version: $Version")
+if (-not [string]::IsNullOrWhiteSpace($commitSha)) {
+    $headerLines.Add("# commit: $commitSha")
+}
+$headerLines.Add("# built_at: $builtAtUtc")
+
+$installedAppExe = Join-Path $installerInputDir 'LaptopTester.exe'
+if (Test-Path -LiteralPath $installedAppExe) {
+    $appHash = (Get-FileHash -Path $installedAppExe -Algorithm SHA256).Hash.ToLowerInvariant()
+    $headerLines.Add("# app_sha256: $appHash")
+}
+if (Test-Path -LiteralPath $portableDest) {
+    $portHash = (Get-FileHash -Path $portableDest -Algorithm SHA256).Hash.ToLowerInvariant()
+    $headerLines.Add("# portable_sha256: $portHash")
+}
+
+$fileLines = foreach ($file in $artifacts) {
     $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
     "$hash  $($file.Name)"
 }
-Set-Content -Path $checksumPath -Value $lines -Encoding UTF8
+Set-Content -Path $checksumPath -Value ($headerLines + $fileLines) -Encoding UTF8
 Write-Host "Checksums written to $checksumPath"
 Get-ChildItem -Path $distDir | Select-Object Name, Length

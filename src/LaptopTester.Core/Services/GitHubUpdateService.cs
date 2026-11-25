@@ -93,6 +93,24 @@ public sealed class GitHubUpdateService : IDisposable
         return v is not null ? $"{v.Major}.{v.Minor}.{Math.Max(0, v.Build)}" : "1.0.0";
     }
 
+    public static string? GetCurrentCommitSha(Assembly? entryAssembly = null)
+    {
+        var entry = Assembly.GetEntryAssembly();
+        var asm = entryAssembly
+            ?? (entry?.GetName().Name?.StartsWith("LaptopTester", StringComparison.OrdinalIgnoreCase) == true
+                ? entry
+                : typeof(GitHubUpdateService).Assembly);
+        var infoAttr = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(infoAttr))
+            return null;
+
+        int plus = infoAttr.IndexOf('+');
+        if (plus < 0 || plus + 1 >= infoAttr.Length)
+            return null;
+
+        return NormalizeCommitSha(infoAttr[(plus + 1)..]);
+    }
+
     public UpdaterSettings LoadSettings()
     {
         try
@@ -135,10 +153,12 @@ public sealed class GitHubUpdateService : IDisposable
         string? currentVersion = null,
         string? tokenOverride = null,
         AppInstallMode? installModeOverride = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string? currentCommitOverride = null,
+        string? currentProcessPathOverride = null)
     {
         string current = NormalizeVersion(currentVersion ?? GetCurrentVersion());
-        AppInstallMode mode = installModeOverride ?? DetectInstallMode(Environment.ProcessPath);
+        AppInstallMode mode = installModeOverride ?? DetectInstallMode(currentProcessPathOverride ?? Environment.ProcessPath);
         UpdaterSettings settings = LoadSettings();
         string? token = ResolveToken(tokenOverride, settings);
 
@@ -196,15 +216,75 @@ public sealed class GitHubUpdateService : IDisposable
             }
 
             var (primary, checksum) = SelectPreferredAssets(release.Assets, mode);
-            bool newer = CompareVersions(release.NormalizedVersion, current) > 0;
+            int cmp = CompareVersions(release.NormalizedVersion, current);
+            bool newer = cmp > 0;
+            bool isHotfix = false;
+            string? remoteCommit = null;
+            string? remoteAssetSha = ExtractSha256Digest(primary?.Digest);
 
-            string status = !newer
-                ? $"You are up to date (v{current})."
-                : primary is null
-                    ? $"Version {release.TagName} was found on GitHub, but no Windows .exe release asset is attached yet."
-                    : $"Update available: {release.TagName} ({FormatMegabytes(primary.SizeBytes)} MB). Click 'Update & Restart Now' to update automatically without reinstalling.";
+            if (cmp == 0 && primary is not null && mode != AppInstallMode.Development)
+            {
+                var manifest = checksum is not null
+                    ? await TryFetchChecksumManifestAsync(checksum, token, cts.Token)
+                    : null;
 
-            return new UpdateCheckResult(newer, current, mode, release, primary, checksum, status);
+                remoteCommit = manifest?.CommitSha;
+                if (manifest is not null && manifest.FileHashes.TryGetValue(primary.Name, out var assetHash))
+                    remoteAssetSha = assetHash;
+
+                string? remoteRunningSha = mode == AppInstallMode.Portable
+                    ? (manifest?.PortableExeSha256 ?? remoteAssetSha)
+                    : manifest?.AppExeSha256;
+
+                string? localCommit = NormalizeCommitSha(currentCommitOverride ?? GetCurrentCommitSha());
+
+                if (!string.IsNullOrEmpty(remoteCommit) && !string.IsNullOrEmpty(localCommit))
+                {
+                    isHotfix = !CommitShasMatch(localCommit, remoteCommit);
+                }
+                else if (!string.IsNullOrEmpty(remoteRunningSha))
+                {
+                    string? localExePath = currentProcessPathOverride ?? Environment.ProcessPath;
+                    if (!string.IsNullOrWhiteSpace(localExePath) && File.Exists(localExePath))
+                    {
+                        try
+                        {
+                            string localSha = await ComputeSha256Async(localExePath, cts.Token);
+                            isHotfix = !localSha.Equals(remoteRunningSha, StringComparison.OrdinalIgnoreCase);
+                        }
+                        catch { }
+                    }
+                }
+                else if (!string.IsNullOrEmpty(remoteAssetSha) && !string.IsNullOrWhiteSpace(settings.InstalledHotfixSha256))
+                {
+                    isHotfix = !settings.InstalledHotfixSha256.Equals(remoteAssetSha, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            bool available = newer || isHotfix;
+            string shortCommit = !string.IsNullOrEmpty(remoteCommit)
+                ? $" ({remoteCommit[..Math.Min(7, remoteCommit.Length)]})"
+                : "";
+
+            string status = isHotfix && primary is not null
+                ? $"Hotfix available for {release.TagName}{shortCommit} ({FormatMegabytes(primary.SizeBytes)} MB). Click 'Update & Restart Now' to patch in place without reinstalling."
+                : !newer
+                    ? $"You are up to date (v{current})."
+                    : primary is null
+                        ? $"Version {release.TagName} was found on GitHub, but no Windows .exe release asset is attached yet."
+                        : $"Update available: {release.TagName} ({FormatMegabytes(primary.SizeBytes)} MB). Click 'Update & Restart Now' to update automatically without reinstalling.";
+
+            return new UpdateCheckResult(
+                available,
+                current,
+                mode,
+                release,
+                primary,
+                checksum,
+                status,
+                IsSameVersionHotfix: isHotfix,
+                RemoteCommitSha: remoteCommit,
+                RemoteAssetSha256: remoteAssetSha);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -313,6 +393,17 @@ public sealed class GitHubUpdateService : IDisposable
 
         string exePath = targetProcessPath ?? Environment.ProcessPath ?? AppContext.BaseDirectory;
         string installDir = Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory;
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(check.RemoteCommitSha))
+                settings.InstalledHotfixCommit = check.RemoteCommitSha;
+            string? appliedSha = expectedSha ?? check.RemoteAssetSha256;
+            if (!string.IsNullOrWhiteSpace(appliedSha))
+                settings.InstalledHotfixSha256 = appliedSha;
+            SaveSettings(settings);
+        }
+        catch { }
 
         progress?.Report(new UpdateDownloadProgress(totalBytes, totalBytes, 100, $"Update {release.TagName} verified and ready to install."));
         return new PreparedUpdate(destPath, release.TagName, check.InstallMode, exePath, installDir, verified);
@@ -496,9 +587,16 @@ public sealed class GitHubUpdateService : IDisposable
                 string browserUrl = GetString(item, "browser_download_url");
                 string apiUrl = GetString(item, "url");
                 long size = item.TryGetProperty("size", out var szEl) && szEl.TryGetInt64(out long s) ? s : 0;
+                DateTimeOffset? updatedAt = item.TryGetProperty("updated_at", out var updEl) && updEl.ValueKind == JsonValueKind.String
+                    && DateTimeOffset.TryParse(updEl.GetString(), out var parsedUpd)
+                    ? parsedUpd
+                    : null;
+                string? digest = item.TryGetProperty("digest", out var digEl) && digEl.ValueKind == JsonValueKind.String
+                    ? digEl.GetString()
+                    : null;
 
                 if (!string.IsNullOrWhiteSpace(assetName))
-                    assets.Add(new ReleaseAssetInfo(assetName, browserUrl, apiUrl, size));
+                    assets.Add(new ReleaseAssetInfo(assetName, browserUrl, apiUrl, size, updatedAt, digest));
             }
         }
 
@@ -535,27 +633,109 @@ public sealed class GitHubUpdateService : IDisposable
         return (primary, checksum);
     }
 
-    internal static Dictionary<string, string> ParseSha256Sums(string content)
+    internal static Dictionary<string, string> ParseSha256Sums(string content) =>
+        new(ParseChecksumManifest(content).FileHashes, StringComparer.OrdinalIgnoreCase);
+
+    internal static ReleaseChecksumManifest ParseChecksumManifest(string content)
     {
         var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(content)) return map;
+        string? commit = null;
+        DateTimeOffset? builtAt = null;
+        string? appSha = null;
+        string? portableSha = null;
 
-        foreach (string rawLine in content.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        if (!string.IsNullOrWhiteSpace(content))
         {
-            string line = rawLine.Trim();
-            if (line.Length == 0 || line.StartsWith('#')) continue;
+            foreach (string rawLine in content.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+            {
+                string line = rawLine.Trim();
+                if (line.Length == 0) continue;
 
-            int sep = line.IndexOfAny([' ', '\t']);
-            if (sep != 64) continue;
+                if (line.StartsWith('#'))
+                {
+                    string comment = line.TrimStart('#').Trim();
+                    int colon = comment.IndexOf(':');
+                    if (colon > 0)
+                    {
+                        string key = comment[..colon].Trim();
+                        string val = comment[(colon + 1)..].Trim();
+                        if (key.Equals("commit", StringComparison.OrdinalIgnoreCase))
+                            commit = NormalizeCommitSha(val);
+                        else if (key.Equals("built_at", StringComparison.OrdinalIgnoreCase) && DateTimeOffset.TryParse(val, out var dt))
+                            builtAt = dt.ToUniversalTime();
+                        else if (key.Equals("app_sha256", StringComparison.OrdinalIgnoreCase))
+                            appSha = ExtractSha256Digest(val);
+                        else if (key.Equals("portable_sha256", StringComparison.OrdinalIgnoreCase))
+                            portableSha = ExtractSha256Digest(val);
+                    }
+                    continue;
+                }
 
-            string hash = line[..64];
-            if (!IsHexString(hash)) continue;
+                int sep = line.IndexOfAny([' ', '\t']);
+                if (sep != 64) continue;
 
-            string file = line[sep..].Trim().TrimStart('*').Trim();
-            if (!string.IsNullOrWhiteSpace(file))
-                map[Path.GetFileName(file)] = hash.ToLowerInvariant();
+                string hash = line[..64];
+                if (!IsHexString(hash)) continue;
+
+                string file = line[sep..].Trim().TrimStart('*').Trim();
+                if (!string.IsNullOrWhiteSpace(file))
+                    map[Path.GetFileName(file)] = hash.ToLowerInvariant();
+            }
         }
-        return map;
+
+        return new ReleaseChecksumManifest(map, commit, builtAt, appSha, portableSha);
+    }
+
+    internal static bool CommitShasMatch(string? left, string? right)
+    {
+        string? l = NormalizeCommitSha(left);
+        string? r = NormalizeCommitSha(right);
+        if (l is null || r is null) return false;
+        return l.StartsWith(r, StringComparison.OrdinalIgnoreCase) || r.StartsWith(l, StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static string? NormalizeCommitSha(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        string s = raw.Trim();
+        int sep = s.IndexOfAny(['.', '-', ' ', '\t']);
+        if (sep > 0) s = s[..sep];
+        return s.Length is >= 7 and <= 40 && IsHexString(s) ? s.ToLowerInvariant() : null;
+    }
+
+    internal static string? ExtractSha256Digest(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        string s = raw.Trim();
+        if (s.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
+            s = s[7..].Trim();
+        return s.Length == 64 && IsHexString(s) ? s.ToLowerInvariant() : null;
+    }
+
+    private async Task<ReleaseChecksumManifest?> TryFetchChecksumManifestAsync(
+        ReleaseAssetInfo checksumAsset,
+        string? token,
+        CancellationToken ct)
+    {
+        try
+        {
+            string sumUrl = ChooseDownloadUrl(checksumAsset, token);
+            if (!IsTrustedGitHubUrl(sumUrl)) return null;
+
+            string accept = !string.IsNullOrWhiteSpace(token) && sumUrl.Contains("api.github.com", StringComparison.OrdinalIgnoreCase)
+                ? "application/octet-stream"
+                : "text/plain";
+            using var sumReq = CreateGitHubRequest(HttpMethod.Get, sumUrl, accept, token);
+            using var sumResp = await _http.SendAsync(sumReq, ct);
+            if (!sumResp.IsSuccessStatusCode) return null;
+
+            string sumText = await sumResp.Content.ReadAsStringAsync(ct);
+            return ParseChecksumManifest(sumText);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     internal static int CompareVersions(string left, string right)

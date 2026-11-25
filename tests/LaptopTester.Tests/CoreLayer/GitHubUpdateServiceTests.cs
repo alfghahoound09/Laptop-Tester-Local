@@ -254,4 +254,145 @@ public sealed class GitHubUpdateServiceTests
         Assert.Contains("$Mode -eq 'Portable'", script);
         Assert.Contains(".bak", script);
     }
+
+    [Fact]
+    public void ParseChecksumManifest_ExtractsCommitMetadataAndFileHashes()
+    {
+        string appSha = new string('a', 64);
+        string portSha = new string('b', 64);
+        string setupSha = new string('c', 64);
+        string text = $"""
+            # version: 1.0.1
+            # commit: e09261f8ae9555d84b161dea1d8e4a75a41600b8
+            # built_at: 2026-11-25T15:30:00Z
+            # app_sha256: {appSha}
+            # portable_sha256: {portSha}
+            {portSha}  LaptopTester-1.0.1-win-x64-portable.exe
+            {setupSha}  LaptopTester-Setup-1.0.1-win-x64.exe
+            """;
+
+        var manifest = GitHubUpdateService.ParseChecksumManifest(text);
+        Assert.Equal("e09261f8ae9555d84b161dea1d8e4a75a41600b8", manifest.CommitSha);
+        Assert.Equal(appSha, manifest.AppExeSha256);
+        Assert.Equal(portSha, manifest.PortableExeSha256);
+        Assert.NotNull(manifest.BuiltAtUtc);
+        Assert.Equal(2, manifest.FileHashes.Count);
+        Assert.Equal(setupSha, manifest.FileHashes["LaptopTester-Setup-1.0.1-win-x64.exe"]);
+
+        // Backward-compatible ParseSha256Sums still returns only the file hash entries
+        var legacyMap = GitHubUpdateService.ParseSha256Sums(text);
+        Assert.Equal(2, legacyMap.Count);
+        Assert.Equal(portSha, legacyMap["LaptopTester-1.0.1-win-x64-portable.exe"]);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_SameVersionHotfix_DetectsCommitAndSha256MismatchWithoutLoop()
+    {
+        using var dir = new TempDirectory();
+        string fakePortableExe = Path.Combine(dir.Path, "LaptopTester-1.0.1-win-x64-portable.exe");
+        byte[] oldExeBytes = Encoding.UTF8.GetBytes("old-v1.0.1-binary");
+        await File.WriteAllBytesAsync(fakePortableExe, oldExeBytes);
+        string oldSha = Convert.ToHexStringLower(SHA256.HashData(oldExeBytes));
+        string newSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes("patched-v1.0.1-binary")));
+
+        string releaseJson = $$"""
+            {
+              "tag_name": "v1.0.1",
+              "name": "LaptopTester v1.0.1",
+              "html_url": "https://github.com/alfghahoound09/Laptop-Tester-Local/releases/tag/v1.0.1",
+              "body": "Hotfix build",
+              "prerelease": false,
+              "published_at": "2026-11-25T15:30:00Z",
+              "assets": [
+                {
+                  "name": "LaptopTester-1.0.1-win-x64-portable.exe",
+                  "browser_download_url": "https://github.com/alfghahoound09/Laptop-Tester-Local/releases/download/v1.0.1/LaptopTester-1.0.1-win-x64-portable.exe",
+                  "url": "https://api.github.com/repos/alfghahoound09/Laptop-Tester-Local/releases/assets/1",
+                  "size": 65000000,
+                  "updated_at": "2026-11-25T15:30:00Z",
+                  "digest": "sha256:{{newSha}}"
+                },
+                {
+                  "name": "LaptopTester-Setup-1.0.1-win-x64.exe",
+                  "browser_download_url": "https://github.com/alfghahoound09/Laptop-Tester-Local/releases/download/v1.0.1/LaptopTester-Setup-1.0.1-win-x64.exe",
+                  "url": "https://api.github.com/repos/alfghahoound09/Laptop-Tester-Local/releases/assets/2",
+                  "size": 45000000,
+                  "updated_at": "2026-11-25T15:30:00Z"
+                },
+                {
+                  "name": "SHA256SUMS.txt",
+                  "browser_download_url": "https://github.com/alfghahoound09/Laptop-Tester-Local/releases/download/v1.0.1/SHA256SUMS.txt",
+                  "url": "https://api.github.com/repos/alfghahoound09/Laptop-Tester-Local/releases/assets/3",
+                  "size": 300
+                }
+              ]
+            }
+            """;
+
+        string sumsContent = $"""
+            # version: 1.0.1
+            # commit: e09261f8ae9555d84b161dea1d8e4a75a41600b8
+            # built_at: 2026-11-25T15:30:00Z
+            # portable_sha256: {newSha}
+            {newSha}  LaptopTester-1.0.1-win-x64-portable.exe
+            {newSha}  LaptopTester-Setup-1.0.1-win-x64.exe
+            """;
+
+        using var handler = new StubHttpHandler(req =>
+        {
+            string uri = req.RequestUri!.ToString();
+            if (uri.EndsWith("SHA256SUMS.txt", StringComparison.Ordinal))
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(sumsContent, Encoding.UTF8, "text/plain") };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(releaseJson, Encoding.UTF8, "application/json") };
+        });
+
+        using var http = new HttpClient(handler);
+        var svc = new GitHubUpdateService(http, Path.Combine(dir.Path, "updater.json"), Path.Combine(dir.Path, "updates"));
+
+        // 1. Installer mode with older commit SHA -> detects hotfix
+        var diffCommit = await svc.CheckForUpdatesAsync(
+            currentVersion: "1.0.1",
+            installModeOverride: AppInstallMode.Installer,
+            currentCommitOverride: "3420c3955a6fc4d2601272d4278c48286e58a6a8");
+        Assert.True(diffCommit.IsUpdateAvailable);
+        Assert.True(diffCommit.IsSameVersionHotfix);
+        Assert.Equal("e09261f8ae9555d84b161dea1d8e4a75a41600b8", diffCommit.RemoteCommitSha);
+        Assert.Contains("Hotfix available", diffCommit.StatusMessage);
+
+        // 2. Installer mode with matching commit SHA -> up to date (no loop)
+        var sameCommit = await svc.CheckForUpdatesAsync(
+            currentVersion: "1.0.1",
+            installModeOverride: AppInstallMode.Installer,
+            currentCommitOverride: "e09261f");
+        Assert.False(sameCommit.IsUpdateAvailable);
+        Assert.False(sameCommit.IsSameVersionHotfix);
+
+        // 3. Portable mode without commit SHA -> falls back to running .exe SHA-256 comparison
+        var diffPortSha = await svc.CheckForUpdatesAsync(
+            currentVersion: "1.0.1",
+            installModeOverride: AppInstallMode.Portable,
+            currentCommitOverride: "",
+            currentProcessPathOverride: fakePortableExe);
+        Assert.True(diffPortSha.IsUpdateAvailable);
+        Assert.True(diffPortSha.IsSameVersionHotfix);
+        Assert.NotEqual(oldSha, diffPortSha.RemoteAssetSha256);
+
+        // Once the portable exe matches the remote SHA-256 -> up to date (no loop)
+        await File.WriteAllBytesAsync(fakePortableExe, Encoding.UTF8.GetBytes("patched-v1.0.1-binary"));
+        var samePortSha = await svc.CheckForUpdatesAsync(
+            currentVersion: "1.0.1",
+            installModeOverride: AppInstallMode.Portable,
+            currentCommitOverride: "",
+            currentProcessPathOverride: fakePortableExe);
+        Assert.False(samePortSha.IsUpdateAvailable);
+        Assert.False(samePortSha.IsSameVersionHotfix);
+
+        // 4. Development mode never prompts same-version hotfixes
+        var devCheck = await svc.CheckForUpdatesAsync(
+            currentVersion: "1.0.1",
+            installModeOverride: AppInstallMode.Development,
+            currentCommitOverride: "3420c39");
+        Assert.False(devCheck.IsUpdateAvailable);
+        Assert.False(devCheck.IsSameVersionHotfix);
+    }
 }
