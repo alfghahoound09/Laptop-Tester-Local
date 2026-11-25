@@ -1,9 +1,17 @@
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 using LaptopTester.Core.Models;
 using Microsoft.Win32;
 
 namespace LaptopTester.Core.Services;
+
+internal static class GpuKind
+{
+    public const string Discrete = "Discrete";
+    public const string Integrated = "Integrated";
+    public const string Virtual = "Virtual / Basic";
+}
 
 /// <summary>Collects real Windows CPU, RAM, GPU, Storage, Display/EDID, and OS specifications.</summary>
 public sealed class HardwareService
@@ -124,7 +132,7 @@ public sealed class HardwareService
 
         bool isVm = DetectVirtualMachine(mfg, model, smbios.BiosVendor);
 
-        string primaryGpu = gpus.FirstOrDefault()?.Name ?? "Unknown GPU";
+        string primaryGpu = BuildGpuSummary(gpus);
         var internalDrives = drives.Where(d => !d.IsExternal).ToList();
         double totalStorageGb = internalDrives.Sum(d => d.SizeGb);
         string storageSummary = internalDrives.Count == 0
@@ -201,23 +209,90 @@ public sealed class HardwareService
         return new RamDetails(physicalGb, usableGb, primarySpeed, primaryType, modules.Count, totalSlots, modules);
     }
 
-    private static List<GpuDetails> BuildGpuDetails(IReadOnlyList<Dictionary<string, object?>> gpuRows)
+    internal static string ClassifyGpu(string name)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            return GpuKind.Integrated;
+
+        string[] virtualMarkers =
+        [
+            "Microsoft Basic Display",
+            "Microsoft Basic Render",
+            "Remote Display",
+            "Hyper-V",
+            "VMware SVGA",
+            "VirtualBox",
+            "Parsec",
+            "Virtual Display",
+            "QXL",
+            "Citrix"
+        ];
+        if (virtualMarkers.Any(m => name.Contains(m, StringComparison.OrdinalIgnoreCase)))
+            return GpuKind.Virtual;
+
+        string[] discreteMarkers =
+        [
+            "NVIDIA",
+            "GeForce",
+            "Quadro",
+            "Radeon RX",
+            "Radeon Pro",
+            "FirePro",
+            "Xe MAX"
+        ];
+        if (discreteMarkers.Any(m => name.Contains(m, StringComparison.OrdinalIgnoreCase))
+            || Regex.IsMatch(name, @"\bRTX\b|Arc(\(TM\))?\s*[AB]\d", RegexOptions.IgnoreCase))
+            return GpuKind.Discrete;
+
+        return GpuKind.Integrated;
+    }
+
+    internal static GpuDetails? SelectPrimaryGpu(IReadOnlyList<GpuDetails> gpus) =>
+        gpus.FirstOrDefault(g => g.AdapterType == GpuKind.Discrete)
+        ?? gpus.FirstOrDefault(g => g.AdapterType == GpuKind.Integrated)
+        ?? gpus.FirstOrDefault();
+
+    internal static string BuildGpuSummary(IReadOnlyList<GpuDetails> gpus)
+    {
+        if (gpus.Count == 0) return "Unknown GPU";
+
+        var active = gpus.Where(g => g.AdapterType != GpuKind.Virtual).ToList();
+        if (active.Count == 0) active = gpus.ToList();
+
+        return string.Join(" + ", active
+            .OrderByDescending(g => g.AdapterType == GpuKind.Discrete)
+            .Select(g =>
+            {
+                string tag = g.AdapterType switch
+                {
+                    GpuKind.Discrete => "dGPU",
+                    GpuKind.Integrated => "iGPU",
+                    _ => "Virtual"
+                };
+                return $"{g.Name} ({tag})";
+            }));
+    }
+
+    internal static List<GpuDetails> BuildGpuDetails(
+        IReadOnlyList<Dictionary<string, object?>> gpuRows,
+        IReadOnlyDictionary<string, double>? registryVramByDesc = null)
+    {
+        var regVram = registryVramByDesc ?? ReadRegistryGpuVramByDesc();
         var list = new List<GpuDetails>();
         foreach (var row in gpuRows)
         {
             string name = WmiQueryHelper.Str(row, "Name");
             if (string.IsNullOrWhiteSpace(name)) continue;
             double vramGb = Math.Round(WmiQueryHelper.ULong(row, "AdapterRAM") / (1024.0 * 1024.0 * 1024.0), 2);
+            if (regVram.TryGetValue(name, out double qwVramGb) && qwVramGb > vramGb)
+                vramGb = qwVramGb;
             int w = WmiQueryHelper.Int(row, "CurrentHorizontalResolution");
             int h = WmiQueryHelper.Int(row, "CurrentVerticalResolution");
             string res = w > 0 && h > 0 ? $"{w}x{h}" : "Active";
-            string kind = name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) || name.Contains("Radeon RX", StringComparison.OrdinalIgnoreCase)
-                ? "Discrete"
-                : "Integrated / Adapter";
+            string kind = ClassifyGpu(name);
             list.Add(new GpuDetails(name, WmiQueryHelper.Str(row, "DriverVersion", "N/A"), vramGb, kind, res));
         }
-        if (list.Count == 0)
+        if (list.Count == 0 && registryVramByDesc is null)
         {
             try
             {
@@ -232,9 +307,11 @@ public sealed class HardwareService
                         string? ver = adapterKey?.GetValue("DriverVersion")?.ToString()?.Trim();
                         if (!string.IsNullOrWhiteSpace(desc))
                         {
-                            string kind = desc.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) || desc.Contains("Radeon RX", StringComparison.OrdinalIgnoreCase)
-                                ? "Discrete" : "Integrated / Adapter";
-                            list.Add(new GpuDetails(desc, ver ?? "N/A", 0, kind, "Active"));
+                            double vramGb = ParseRegistryVramGb(
+                                adapterKey?.GetValue("HardwareInformation.qwMemorySize")
+                                ?? adapterKey?.GetValue("HardwareInformation.MemorySize"));
+                            string kind = ClassifyGpu(desc);
+                            list.Add(new GpuDetails(desc, ver ?? "N/A", vramGb, kind, "Active"));
                         }
                     }
                 }
@@ -242,6 +319,46 @@ public sealed class HardwareService
             catch { }
         }
         return list;
+    }
+
+    internal static double ParseRegistryVramGb(object? raw)
+    {
+        if (raw is null) return 0;
+        ulong bytes = raw switch
+        {
+            long l when l > 0 => (ulong)l,
+            ulong ul => ul,
+            int i when i > 0 => (uint)i,
+            uint ui => ui,
+            byte[] b when b.Length >= 8 => BitConverter.ToUInt64(b, 0),
+            byte[] b when b.Length >= 4 => BitConverter.ToUInt32(b, 0),
+            _ => 0
+        };
+        return bytes > 0 ? Math.Round(bytes / (1024.0 * 1024.0 * 1024.0), 2) : 0;
+    }
+
+    private static Dictionary<string, double> ReadRegistryGpuVramByDesc()
+    {
+        var map = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            using var clsKey = baseKey.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}");
+            if (clsKey is null) return map;
+            foreach (var sub in clsKey.GetSubKeyNames().Where(n => n.Length == 4 && char.IsDigit(n[0])))
+            {
+                using var adapterKey = clsKey.OpenSubKey(sub);
+                string? desc = adapterKey?.GetValue("DriverDesc")?.ToString()?.Trim();
+                if (string.IsNullOrWhiteSpace(desc)) continue;
+                double vramGb = ParseRegistryVramGb(
+                    adapterKey?.GetValue("HardwareInformation.qwMemorySize")
+                    ?? adapterKey?.GetValue("HardwareInformation.MemorySize"));
+                if (vramGb > 0 && (!map.TryGetValue(desc, out double prev) || vramGb > prev))
+                    map[desc] = vramGb;
+            }
+        }
+        catch { }
+        return map;
     }
 
     public static IReadOnlyList<DisplayDetails> EnumerateDisplays()
@@ -259,8 +376,7 @@ public sealed class HardwareService
             if (!EnumDisplaySettings(dd.DeviceName, -1 /* ENUM_CURRENT_SETTINGS */, ref dm)) continue;
 
             bool primary = (dd.StateFlags & 0x00000004) != 0;
-            int g = Gcd(dm.dmPelsWidth, dm.dmPelsHeight);
-            string aspect = g > 0 ? $"{dm.dmPelsWidth / g}:{dm.dmPelsHeight / g}" : "";
+            string aspect = ComputeAspectRatio(dm.dmPelsWidth, dm.dmPelsHeight);
             var (mfg, model) = list.Count < edids.Count ? edids[list.Count] : ("Standard", dd.DeviceString);
 
             list.Add(new DisplayDetails(
@@ -277,6 +393,25 @@ public sealed class HardwareService
         return list;
     }
 
+    internal static string ComputeAspectRatio(int widthPx, int heightPx)
+    {
+        if (widthPx <= 0 || heightPx <= 0) return string.Empty;
+        int g = Gcd(widthPx, heightPx);
+        if (g <= 0) return string.Empty;
+        int rw = widthPx / g;
+        int rh = heightPx / g;
+        if (rw == 8 && rh == 5) return "16:10";
+        return $"{rw}:{rh}";
+    }
+
+    internal static (string Mfg, string Model)? ParseEdid(byte[] edid, string fallbackModel)
+    {
+        if (edid.Length < 128) return null;
+        string mfg = DecodeEdidManufacturer((ushort)((edid[8] << 8) | edid[9]));
+        string name = ParseEdidDescriptorName(edid);
+        return (mfg, string.IsNullOrWhiteSpace(name) ? fallbackModel : name);
+    }
+
     private static List<(string Mfg, string Model)> ReadEdidPanels()
     {
         var panels = new List<(string, string)>();
@@ -291,12 +426,8 @@ public sealed class HardwareService
                 foreach (var instName in modelKey.GetSubKeyNames())
                 {
                     using var devParams = modelKey.OpenSubKey($@"{instName}\Device Parameters");
-                    if (devParams?.GetValue("EDID") is byte[] edid && edid.Length >= 128)
-                    {
-                        string mfg = DecodeEdidManufacturer((ushort)((edid[8] << 8) | edid[9]));
-                        string name = ParseEdidDescriptorName(edid);
-                        panels.Add((mfg, string.IsNullOrWhiteSpace(name) ? modelKeyName : name));
-                    }
+                    if (devParams?.GetValue("EDID") is byte[] edid && ParseEdid(edid, modelKeyName) is { } parsed)
+                        panels.Add(parsed);
                 }
             }
         }
@@ -304,7 +435,7 @@ public sealed class HardwareService
         return panels;
     }
 
-    private static string DecodeEdidManufacturer(ushort raw)
+    internal static string DecodeEdidManufacturer(ushort raw)
     {
         char c1 = (char)(((raw >> 10) & 0x1F) + 'A' - 1);
         char c2 = (char)(((raw >> 5) & 0x1F) + 'A' - 1);
@@ -324,7 +455,7 @@ public sealed class HardwareService
         };
     }
 
-    private static string ParseEdidDescriptorName(byte[] edid)
+    internal static string ParseEdidDescriptorName(byte[] edid)
     {
         for (int off = 54; off <= 108; off += 18)
         {
@@ -350,7 +481,7 @@ public sealed class HardwareService
         }
     }
 
-    private static string DecodeSmbiosMemoryType(int code) => code switch
+    internal static string DecodeSmbiosMemoryType(int code) => code switch
     {
         20 => "DDR",
         21 => "DDR2",
@@ -365,7 +496,7 @@ public sealed class HardwareService
         _ => "RAM"
     };
 
-    private static bool DetectVirtualMachine(string mfg, string model, string biosVendor)
+    internal static bool DetectVirtualMachine(string mfg, string model, string biosVendor)
     {
         string combined = $"{mfg} {model} {biosVendor}";
         return combined.Contains("VMware", StringComparison.OrdinalIgnoreCase)
@@ -375,7 +506,7 @@ public sealed class HardwareService
             || combined.Contains("Virtual Machine", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string FirstNonEmpty(params string[] values) =>
+    internal static string FirstNonEmpty(params string[] values) =>
         values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
 
     private static int Gcd(int a, int b) => b == 0 ? a : Gcd(b, a % b);

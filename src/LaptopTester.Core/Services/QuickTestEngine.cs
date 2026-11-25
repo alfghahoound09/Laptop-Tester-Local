@@ -5,18 +5,18 @@ namespace LaptopTester.Core.Services;
 /// <summary>Computes the 100-point Quick Test score, deductions, and final purchase verdict.</summary>
 public sealed class QuickTestEngine
 {
-    public static readonly IReadOnlyList<(string Id, string ViTitle, string EnTitle, int Weight)> StandardSteps =
+    public static readonly IReadOnlyList<(string Id, string Title, int Weight)> StandardSteps =
     [
-        ("hardware", "Kiểm tra Phần cứng & Anti-Fake", "Hardware & Anti-Fake Check", 18),
-        ("storage", "Kiểm tra Ổ cứng & Sức khỏe SMART", "Storage & SMART Health", 14),
-        ("battery", "Kiểm tra Pin & Dung lượng thực", "Battery & Real Capacity", 14),
-        ("display", "Kiểm tra Màn hình & Điểm chết", "Display & Dead Pixels", 12),
-        ("keyboard", "Kiểm tra Bàn phím", "Keyboard Test", 10),
-        ("touchpad", "Kiểm tra Touchpad / Chuột", "Touchpad & Pointer", 8),
-        ("speaker", "Kiểm tra Loa Stereo", "Stereo Speakers", 6),
-        ("microphone", "Kiểm tra Microphone", "Microphone Recording", 6),
-        ("camera", "Kiểm tra Webcam", "Webcam Check", 6),
-        ("connectivity", "Kiểm tra USB / Wi-Fi / Bluetooth", "USB / Wi-Fi / Bluetooth", 6)
+        ("hardware", "Hardware & Authenticity Check", 18),
+        ("storage", "Storage & Drive Health (SMART)", 14),
+        ("battery", "Battery Health & Real Capacity", 14),
+        ("display", "Screen & Dead Pixel Check", 12),
+        ("keyboard", "Keyboard Key Test", 10),
+        ("touchpad", "Touchpad & Pointer", 8),
+        ("speaker", "Stereo Speakers", 6),
+        ("microphone", "Microphone Recording", 6),
+        ("camera", "Webcam Preview", 6),
+        ("connectivity", "USB, Wi-Fi & Bluetooth", 6)
     ];
 
     public (int FinalScore, VerdictBand Verdict, IReadOnlyList<ScoreDeduction> Deductions) Evaluate(IEnumerable<TestResultEntry> results)
@@ -28,7 +28,7 @@ public sealed class QuickTestEngine
         var deductions = new List<ScoreDeduction>();
         bool hasCriticalFail = false;
 
-        foreach (var (id, vi, en, weight) in StandardSteps)
+        foreach (var (id, _, weight) in StandardSteps)
         {
             if (!map.TryGetValue(id, out var entry)) continue;
 

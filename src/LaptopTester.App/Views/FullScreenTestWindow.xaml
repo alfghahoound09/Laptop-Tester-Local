@@ -4,13 +4,21 @@
         WindowStyle="None"
         WindowState="Maximized"
         Topmost="True"
-        Background="Black"
+        Background="#000000"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         MouseRightButtonDown="Window_MouseRightButtonDown"
         KeyDown="Window_KeyDown">
     <Grid x:Name="RootGrid">
-        <Border x:Name="HintBanner" Background="#B0121212" CornerRadius="8" Padding="14,8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,28">
-            <TextBlock x:Name="HintText" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+        <Border x:Name="HintBanner"
+                Background="#D80B0B0F"
+                BorderBrush="#7C3612"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16,9"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,28">
+            <TextBlock x:Name="HintText" Foreground="#FAFAFA" FontSize="13" FontWeight="SemiBold"/>
         </Border>
     </Grid>
 </Window>

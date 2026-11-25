@@ -8,8 +8,6 @@
     <RootNamespace>LaptopTester.App</RootNamespace>
     <AssemblyName>LaptopTester</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.0</Version>
-    <Product>LaptopTester Open Edition</Product>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

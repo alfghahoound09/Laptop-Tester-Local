@@ -14,71 +14,122 @@
                     <TextBlock Text="{Binding SubtitleText}" Style="{StaticResource PageSubtitleStyle}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="{Binding QuickTestBtnLabel}" Command="{Binding StartQuickTestCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"/>
-                    <Button Content="{Binding RescanLabel}" Command="{Binding ScanSystemCommand}" IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBool}}" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button Content="{Binding RescanLabel}"
+                            Command="{Binding ScanSystemCommand}"
+                            IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBool}}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Margin="0,0,10,0"/>
+                    <Button Content="{Binding QuickTestBtnLabel}"
+                            Command="{Binding StartQuickTestCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"/>
                 </StackPanel>
             </Grid>
 
-            <!-- Quick Launch 4-Tile Strip -->
-            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
-                <UniformGrid Columns="4">
-                    <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Hardware" Style="{StaticResource SecondaryButtonStyle}" Background="Transparent" BorderThickness="0" Padding="12">
-                        <StackPanel HorizontalAlignment="Center">
-                            <Border Background="{StaticResource AccentGreenMutedBrush}" CornerRadius="10" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,8">
-                                <Path Data="{StaticResource IconCpu}" Fill="{StaticResource AccentGreenHoverBrush}" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="{Binding TileHardware}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <!-- Windows 11 4-Column Quick Action Tiles -->
+            <UniformGrid Columns="4" Margin="0,0,0,16">
+                <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Hardware" Style="{StaticResource TileButtonStyle}" Margin="0,0,10,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="38" Height="38" HorizontalAlignment="Left">
+                            <Path Data="{StaticResource IconCpu}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="8,0,6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TileHardware}" FontSize="13.5" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TileHardwareSub}" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                         </StackPanel>
-                    </Button>
+                        <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Button>
 
-                    <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Battery" Style="{StaticResource SecondaryButtonStyle}" Background="Transparent" BorderThickness="0" Padding="12">
-                        <StackPanel HorizontalAlignment="Center">
-                            <Border Background="#163322" CornerRadius="10" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,8">
-                                <Path Data="{StaticResource IconBattery}" Fill="#22C55E" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="{Binding TileBattery}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Battery" Style="{StaticResource TileButtonStyle}" Margin="0,0,10,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource StatusPassBgBrush}" BorderBrush="{StaticResource StatusPassBorderBrush}" BorderThickness="1" CornerRadius="8" Width="38" Height="38" HorizontalAlignment="Left">
+                            <Path Data="{StaticResource IconBattery}" Fill="{StaticResource StatusPassBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="8,0,6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TileBattery}" FontSize="13.5" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TileBatterySub}" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                         </StackPanel>
-                    </Button>
+                        <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Button>
 
-                    <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="AntiFake" Style="{StaticResource SecondaryButtonStyle}" Background="Transparent" BorderThickness="0" Padding="12">
-                        <StackPanel HorizontalAlignment="Center">
-                            <Border Background="#332714" CornerRadius="10" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,8">
-                                <Path Data="{StaticResource IconShield}" Fill="#F59E0B" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="{Binding TileAntiFake}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="AntiFake" Style="{StaticResource TileButtonStyle}" Margin="0,0,10,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource StatusWarnBgBrush}" BorderBrush="{StaticResource StatusWarnBorderBrush}" BorderThickness="1" CornerRadius="8" Width="38" Height="38" HorizontalAlignment="Left">
+                            <Path Data="{StaticResource IconShield}" Fill="{StaticResource StatusWarnBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="8,0,6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TileAntiFake}" FontSize="13.5" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TileAntiFakeSub}" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                         </StackPanel>
-                    </Button>
+                        <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Button>
 
-                    <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Thermal" Style="{StaticResource SecondaryButtonStyle}" Background="Transparent" BorderThickness="0" Padding="12">
-                        <StackPanel HorizontalAlignment="Center">
-                            <Border Background="#38181A" CornerRadius="10" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,8">
-                                <Path Data="{StaticResource IconGauge}" Fill="#EF4444" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="{Binding TileBenchmark}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Button Command="{Binding OpenHardwareTileCommand}" CommandParameter="Thermal" Style="{StaticResource TileButtonStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource StatusFailBgBrush}" BorderBrush="{StaticResource StatusFailBorderBrush}" BorderThickness="1" CornerRadius="8" Width="38" Height="38" HorizontalAlignment="Left">
+                            <Path Data="{StaticResource IconGauge}" Fill="{StaticResource StatusFailBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="8,0,6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TileBenchmark}" FontSize="13.5" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TileBenchmarkSub}" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                         </StackPanel>
-                    </Button>
-                </UniformGrid>
-            </Border>
+                        <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Button>
+            </UniformGrid>
 
             <!-- Two-Column System Info + Overview -->
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.15*"/>
                     <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left Card: System Info -->
+                <!-- Left Card: System Specifications -->
                 <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Path Data="{StaticResource IconLaptop}" Fill="{StaticResource AccentGreenHoverBrush}" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding SystemInfoHeader}" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
+                        <Grid Margin="0,0,0,14">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Width="28" Height="28" Margin="0,0,10,0">
+                                    <Path Data="{StaticResource IconLaptop}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding SystemInfoHeader}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Border HorizontalAlignment="Right"
+                                    Background="{StaticResource StatusWarnBgBrush}"
+                                    BorderBrush="{StaticResource StatusWarnBorderBrush}"
+                                    BorderThickness="1" CornerRadius="4" Padding="8,3"
+                                    Visibility="{Binding VmNotice, Converter={StaticResource NullToVis}}">
+                                <TextBlock Text="{Binding VmNotice}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource StatusWarnBrush}"/>
+                            </Border>
+                        </Grid>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="118"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
@@ -86,69 +137,80 @@
                                 <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ModelText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="0" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,6,0,8"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ModelText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,6,0,8"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="OS" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OsText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="1" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="OS" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OsText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="CPU" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CpuText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="2" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="CPU" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CpuText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="RAM" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding RamText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="3" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="RAM" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding RamText}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="GPU" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding GpuText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="4" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="GPU" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding GpuText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Ổ cứng / Disk" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StorageText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="5" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Storage / Disk" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StorageText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Màn hình" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,9"/>
-                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding DisplayText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,9"/>
+                            <Border Grid.Row="6" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderSubtleBrush}" VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Display" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding DisplayText}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
-                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Pin / Battery" Foreground="{StaticResource TextSecondaryBrush}"/>
-                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding BatteryText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenHoverBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Battery" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding BatteryText}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Right Card: Product Info & Tips -->
+                <!-- Right Card: Suite Capabilities & Tip -->
                 <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <Border Background="{StaticResource AccentGreenBrush}" CornerRadius="10" Width="46" Height="46" Margin="0,0,12,0">
-                                <Path Data="{StaticResource IconSettings}" Fill="#081A0E" Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Background="{StaticResource AccentOrangeBrush}" CornerRadius="8" Width="44" Height="44" Margin="0,0,12,0">
+                                <Path Data="{StaticResource IconSettings}" Fill="#060608" Width="21" Height="21" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding AboutTitle}" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Clean-room WPF .NET 10 Diagnostic Suite" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
+                                <TextBlock Text="{Binding AboutTitle}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="Windows 11 Fluent · .NET 10 WPF Suite" Foreground="{StaticResource AccentOrangeTextBrush}" FontSize="12" FontWeight="Medium"/>
                             </StackPanel>
                         </StackPanel>
 
-                        <TextBlock Text="{Binding AboutDesc}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,14"/>
+                        <TextBlock Text="{Binding AboutDesc}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,16"/>
 
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Tính năng chính:" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenHoverBrush}" Margin="0,0,0,6"/>
-                                <TextBlock Text="• Đối chiếu WMI / Registry / SMBIOS" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <TextBlock Text="• Kiểm tra Pin + Stress Test 30s" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <TextBlock Text="• Benchmark CPU / RAM / Ổ cứng" Foreground="{StaticResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Ngoại vi &amp; Báo cáo:" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenHoverBrush}" Margin="0,0,0,6"/>
-                                <TextBlock Text="• Màn hình, Bàn phím, Touchpad" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <TextBlock Text="• Loa Stereo, Mic, Webcam, USB" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <TextBlock Text="• Xuất báo cáo HTML / JSON" Foreground="{StaticResource TextSecondaryBrush}"/>
-                            </StackPanel>
+                            <Border Grid.Column="0" Style="{StaticResource SubCardBorderStyle}" Margin="0,0,6,0">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding FeaturesHeading}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Genuine Part Audit (BIOS Check)" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,0,0,4"/>
+                                    <TextBlock Text="• Battery Health &amp; 30s Drain Test" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,0,0,4"/>
+                                    <TextBlock Text="• CPU, RAM &amp; Drive Speed Test" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource SubCardBorderStyle}" Margin="6,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PeripheralsHeading}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Screen, Keyboard &amp; Touchpad" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,0,0,4"/>
+                                    <TextBlock Text="• Speakers, Mic, Webcam &amp; USB" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,0,0,4"/>
+                                    <TextBlock Text="• Shareable HTML / JSON Reports" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
+                                </StackPanel>
+                            </Border>
                         </Grid>
 
-                        <Border Background="{StaticResource AccentGreenMutedBrush}" BorderBrush="#235436" BorderThickness="1" CornerRadius="8" Padding="12">
-                            <TextBlock Text="{Binding TipText}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12.5" TextWrapping="Wrap"/>
+                        <Border Style="{StaticResource AccentCardBorderStyle}">
+                            <TextBlock Text="{Binding TipText}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"/>
                         </Border>
                     </StackPanel>
                 </Border>
@@ -163,15 +225,16 @@
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Style="{StaticResource SubCardBorderStyle}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Phiên hiện tại:" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding CompletedCountText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenHoverBrush}"/>
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource AccentOrangeBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding SessionLabel}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding CompletedCountText}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="2" Style="{StaticResource SubCardBorderStyle}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Chế độ quyền:" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding PrivilegeBadge}" FontWeight="SemiBold"/>
-                        <TextBlock Text="  ·  Phím tắt F1–F7" Foreground="{StaticResource TextMutedBrush}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding PrivilegeLabel}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding PrivilegeBadge}" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}"/>
+                        <TextBlock Text="  ·  F1–F7" Foreground="{StaticResource TextMutedBrush}" FontFamily="{StaticResource MonoFontFamily}" Margin="10,0,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>

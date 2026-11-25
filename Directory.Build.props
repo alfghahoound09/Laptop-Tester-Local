@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Authors>LaptopTester Contributors</Authors>
+    <Company>LaptopTester Open Edition</Company>
+    <Product>LaptopTester Open Edition</Product>
+    <RepositoryUrl>https://github.com/alfghahoound09/Laptop-Tester-Local</RepositoryUrl>
+  </PropertyGroup>
+</Project>

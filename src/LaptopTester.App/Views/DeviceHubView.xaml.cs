@@ -1,13 +1,20 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using LaptopTester.App.ViewModels;
 
 namespace LaptopTester.App.Views;
 
 public partial class DeviceHubView : UserControl
 {
-    public DeviceHubView() => InitializeComponent();
+    public DeviceHubView()
+    {
+        InitializeComponent();
+        TouchpadCanvas.DefaultDrawingAttributes.Color = Color.FromRgb(255, 133, 61);
+        TouchpadCanvas.DefaultDrawingAttributes.Width = 2.5;
+        TouchpadCanvas.DefaultDrawingAttributes.Height = 2.5;
+    }
 
     private void OnClearTouchpadClick(object sender, RoutedEventArgs e)
     {

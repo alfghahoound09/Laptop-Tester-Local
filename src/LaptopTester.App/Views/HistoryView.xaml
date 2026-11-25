@@ -13,63 +13,119 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Lịch Sử Kiểm Tra" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="{Binding TitleText}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{Binding StatusText}" Style="{StaticResource PageSubtitleStyle}"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="Làm mới" Command="{Binding LoadCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                <Button Content="Xóa mục chọn" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                <Button Content="Xóa tất cả" Command="{Binding ClearAllCommand}" Style="{StaticResource DangerButtonStyle}"/>
+                <Button Content="{Binding RefreshBtnText}" Command="{Binding LoadCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                <Button Content="Delete Selected" Command="{Binding DeleteSelectedCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                <Button Content="{Binding ClearBtnText}" Command="{Binding ClearAllCommand}" Style="{StaticResource DangerButtonStyle}"/>
             </StackPanel>
         </Grid>
 
-        <ListBox Grid.Row="1" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
-                 Background="Transparent" BorderThickness="0"
-                 VirtualizingStackPanel.IsVirtualizing="True"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0,0,0,10"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <Border x:Name="Bd" Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
-                                    <ContentPresenter/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Session List -->
+            <Grid Grid.Column="0">
+                <Border Style="{StaticResource CardBorderStyle}" VerticalAlignment="Top" Visibility="{Binding Sessions.Count, Converter={StaticResource ZeroVis}}">
+                    <TextBlock Text="No saved diagnostic sessions found in %LocalAppData%\LaptopTester\history." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </Border>
+
+                <ListBox ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
+                         Background="Transparent" BorderThickness="0"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,0,0,10"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                            <Grid>
+                                                <Border x:Name="SelBar" Width="3" CornerRadius="2" Background="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Left" Margin="-6,2,0,2" Visibility="Collapsed"/>
+                                                <ContentPresenter Margin="4,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentOrangeBorderBrush}"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="#1B130E"/>
+                                                <Setter TargetName="SelBar" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MachineModel}" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}', Mode=OneWay}"/>
+                                        <Run Text=" · "/><Run Text="{Binding CpuName, Mode=OneWay}"/>
+                                        <Run Text=" · "/><Run Text="{Binding RamSummary, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{Binding Verdict, Converter={StaticResource VerdictToBgBrush}}" BorderBrush="{Binding Verdict, Converter={StaticResource VerdictToBrush}}" BorderThickness="1" CornerRadius="6" Padding="10,5" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <TextBlock Text="{Binding FinalScore, StringFormat='{}{0} / 100'}" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{Binding Verdict, Converter={StaticResource VerdictToBrush}}"/>
                                 </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentGreenBrush}"/>
-                                        <Setter TargetName="Bd" Property="Background" Value="#18221C"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="{Binding MachineModel}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,3,0,0">
-                                <Run Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}', Mode=OneWay}"/>
-                                <Run Text=" · "/><Run Text="{Binding CpuName, Mode=OneWay}"/>
-                                <Run Text=" · "/><Run Text="{Binding RamSummary, Mode=OneWay}"/>
-                            </TextBlock>
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="{StaticResource AccentGreenMutedBrush}" CornerRadius="8" Padding="12,6" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding FinalScore, StringFormat='{}{0} / 100'}" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Selected Session Inspector -->
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="SESSION DETAILS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="Select a saved session on the left to inspect test results and notes."
+                               Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"
+                               Visibility="{Binding SelectedSession, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
+                    <StackPanel Visibility="{Binding SelectedSession, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding SelectedSession.MachineModel}" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding SelectedSession.StorageSummary}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" TextWrapping="Wrap" Margin="0,4,0,10"/>
+                        <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,10" Visibility="{Binding SelectedSession.Notes, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding SelectedSession.Notes}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" FontSize="12.5"/>
                         </Border>
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                        <ItemsControl ItemsSource="{Binding SelectedSession.Results}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Title}" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Status}" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

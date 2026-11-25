@@ -2,93 +2,71 @@ using System.Collections.Concurrent;
 
 namespace LaptopTester.Core.Localization;
 
-public enum AppLanguage
-{
-    Vietnamese,
-    English
-}
-
-/// <summary>Bilingual localization provider (Vietnamese / English) with live change notifications.</summary>
+/// <summary>Provides clear, centralized English UI copy and diagnostic verdict text.</summary>
 public sealed class LocalizationService
 {
-    public AppLanguage CurrentLanguage { get; private set; } = AppLanguage.Vietnamese;
-    public event EventHandler? LanguageChanged;
-
-    private static readonly ConcurrentDictionary<string, (string Vi, string En)> Table = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly ConcurrentDictionary<string, string> Table = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["App.Subtitle"] = ("Bộ kiểm tra & chẩn đoán laptop mã nguồn mở", "Open-source laptop hardware & peripheral diagnostics"),
-        ["Nav.Dashboard"] = ("Trang Chủ", "Dashboard"),
-        ["Nav.QuickTest"] = ("Quy Trình", "Quick Test"),
-        ["Nav.Hardware"] = ("Phần Cứng", "Hardware"),
-        ["Nav.Devices"] = ("Thiết Bị", "Devices"),
-        ["Nav.Report"] = ("Báo Cáo", "Report"),
-        ["Nav.History"] = ("Lịch Sử", "History"),
-        ["Nav.Settings"] = ("Cài Đặt", "Settings"),
+        ["App.Subtitle"] = "Laptop hardware diagnostics & pre-purchase inspection",
+        ["Nav.Dashboard"] = "Dashboard",
+        ["Nav.QuickTest"] = "Quick Test",
+        ["Nav.Hardware"] = "Hardware",
+        ["Nav.Devices"] = "Devices",
+        ["Nav.Report"] = "Report",
+        ["Nav.History"] = "History",
+        ["Nav.Settings"] = "Settings",
 
-        ["Dashboard.Title"] = ("Tổng Quan Hệ Thống", "System Overview"),
-        ["Dashboard.Subtitle"] = ("Thông tin phần cứng và trạng thái máy tính theo thời gian thực", "Real-time hardware identity and laptop health status"),
-        ["Dashboard.Tile.Hardware"] = ("Quét Phần Cứng", "Hardware Scan"),
-        ["Dashboard.Tile.Battery"] = ("Kiểm Tra Pin", "Battery Health"),
-        ["Dashboard.Tile.AntiFake"] = ("Chống Fake", "Anti-Fake"),
-        ["Dashboard.Tile.Benchmark"] = ("Benchmark", "Benchmark"),
-        ["Dashboard.SystemInfo"] = ("Thông Tin Hệ Thống", "System Information"),
-        ["Dashboard.Rescan"] = ("Quét lại", "Rescan"),
-        ["Dashboard.AboutTitle"] = ("LaptopTester Open Edition", "LaptopTester Open Edition"),
-        ["Dashboard.AboutDesc"] = ("Công cụ kiểm tra laptop toàn diện với đối chiếu đa nguồn (WMI / Registry / SMBIOS), kiểm tra pin, màn hình, bàn phím, USB, âm thanh và xuất báo cáo HTML/JSON.", "Comprehensive laptop diagnostic suite with 3-source anti-fake cross-checks (WMI / Registry / SMBIOS), battery, display, keyboard, USB, audio, and HTML/JSON reporting."),
-        ["Dashboard.Tip"] = ("Mẹo: Nhấn 'Quy Trình' (F2) để chạy 10 bước kiểm tra nhanh và chấm điểm /100 trước khi mua bán máy.", "Tip: Open 'Quick Test' (F2) for the guided 10-step diagnostic wizard with a /100 score and verdict."),
+        ["Dashboard.Title"] = "System Overview",
+        ["Dashboard.Subtitle"] = "Live hardware summary, component specs, and laptop health",
+        ["Dashboard.Tile.Hardware"] = "Hardware Specs",
+        ["Dashboard.Tile.Battery"] = "Battery Health",
+        ["Dashboard.Tile.AntiFake"] = "Anti-Fake Check",
+        ["Dashboard.Tile.Benchmark"] = "Benchmark",
+        ["Dashboard.SystemInfo"] = "System Information",
+        ["Dashboard.Rescan"] = "Refresh Specs",
+        ["Dashboard.AboutTitle"] = "LaptopTester Open Edition",
+        ["Dashboard.AboutDesc"] = "All-in-one laptop inspection tool. Verifies genuine hardware specs across Windows and BIOS, measures real battery wear, checks screen pixels, keyboard, audio, USB ports, and exports shareable reports.",
+        ["Dashboard.Tip"] = "Tip: Press F2 (Quick Test) to walk through 10 essential checks and get an overall health score out of 100 before buying or selling a laptop.",
 
-        ["AntiFake.Title"] = ("Chống Giả Mạo Phần Cứng", "Hardware Anti-Fake Audit"),
-        ["AntiFake.Subtitle"] = ("Đối chiếu độc lập WMI, Registry và SMBIOS firmware để phát hiện máy sửa thông số", "Cross-check WMI, Registry, and raw SMBIOS firmware tables to detect faked specs"),
-        ["AntiFake.ScanBtn"] = ("Quét Phát Hiện", "Run Anti-Fake Scan"),
-        ["AntiFake.Clean"] = ("Thông số phần cứng nhất quán giữa các nguồn", "Hardware specs are consistent across all sources"),
-        ["AntiFake.Warning"] = ("Phát hiện sai lệch hoặc dấu hiệu cần kiểm tra kỹ", "Detected mismatches or indicators worth checking"),
-        ["AntiFake.SourceHeader"] = ("SO SÁNH THÔNG SỐ TỪ NHIỀU NGUỒN", "MULTI-SOURCE COMPARISON"),
-        ["AntiFake.SourceSub"] = ("Nếu thông số khác nhau giữa các nguồn → Có thể đã bị chỉnh sửa hiển thị", "Discrepancies across sources may indicate display spoofing"),
+        ["AntiFake.Title"] = "Genuine Hardware Audit (Anti-Fake)",
+        ["AntiFake.Subtitle"] = "Compares Windows system info, Registry, and low-level BIOS firmware (SMBIOS) to catch altered specs or relabeled drives",
+        ["AntiFake.ScanBtn"] = "Run Genuine Spec Check",
+        ["AntiFake.Clean"] = "Verified — All hardware specs match across Windows and firmware",
+        ["AntiFake.Warning"] = "Warning — Mismatched or suspicious hardware details found",
+        ["AntiFake.SourceHeader"] = "3-SOURCE HARDWARE VERIFICATION",
+        ["AntiFake.SourceSub"] = "Genuine parts report the same identity in Windows (WMI), Registry, and BIOS firmware (SMBIOS). Differences suggest modified or spoofed specs.",
 
-        ["Battery.Title"] = ("Kiểm Tra Pin", "Battery Health & Stress Test"),
-        ["Battery.Subtitle"] = ("Đọc dung lượng thiết kế, dung lượng thực, chu kỳ sạc và chạy stress test xả pin", "Inspect design vs full capacity, cycle count, and run real drain stress tests"),
-        ["Battery.ScanBtn"] = ("Kiểm tra pin", "Check Battery"),
-        ["Battery.StressStart"] = ("Bắt đầu Stress Test", "Start Stress Test"),
-        ["Battery.StressStop"] = ("Dừng Stress Test", "Stop Stress Test"),
+        ["Battery.Title"] = "Battery Health & Drain Test",
+        ["Battery.Subtitle"] = "Checks factory design capacity vs. current max charge, battery wear, charge cycles, and real drain under load",
+        ["Battery.ScanBtn"] = "Check Battery",
+        ["Battery.StressStart"] = "Start 30s Drain Test",
+        ["Battery.StressStop"] = "Stop Drain Test",
 
-        ["QuickTest.Title"] = ("Quy Trình Kiểm Tra Nhanh (10 Bước)", "Quick Test Wizard (10 Steps)"),
-        ["QuickTest.Subtitle"] = ("Kiểm tra tuần tự phần cứng, ổ cứng, pin, màn hình và ngoại vi để chấm điểm /100", "Guided diagnostic flow across hardware, storage, battery, display, and peripherals"),
-        ["QuickTest.RunAuto"] = ("Chạy bước tự động", "Run Auto Checks"),
-        ["QuickTest.Pass"] = ("Đạt", "Pass"),
-        ["QuickTest.Fail"] = ("Lỗi", "Fail"),
-        ["QuickTest.Skip"] = ("Bỏ qua", "Skip"),
+        ["QuickTest.Title"] = "Quick Test Wizard (10 Steps)",
+        ["QuickTest.Subtitle"] = "Step-by-step inspection of core hardware, storage, battery, screen, and peripherals for a /100 health score",
+        ["QuickTest.RunAuto"] = "Run Automatic Checks",
+        ["QuickTest.Pass"] = "Pass",
+        ["QuickTest.Fail"] = "Fail",
+        ["QuickTest.Skip"] = "Skip",
 
-        ["Verdict.Good"] = ("Máy tốt — An toàn để chọn mua", "Good — Safe to buy"),
-        ["Verdict.Consider"] = ("Cần cân nhắc — Có điểm cần lưu ý", "Consider carefully — Review deductions"),
-        ["Verdict.DoNotBuy"] = ("Không nên mua — Phát hiện lỗi nghiêm trọng", "Do not buy — Critical issues detected"),
+        ["Verdict.Good"] = "Good — Everything looks healthy",
+        ["Verdict.Consider"] = "Use Caution — Review flagged items",
+        ["Verdict.DoNotBuy"] = "Not Recommended — Serious issues found",
 
-        ["Report.Title"] = ("Báo Cáo Tổng Hợp", "Diagnostic Report"),
-        ["Report.ExportHtml"] = ("Xuất HTML / In PDF", "Export HTML / Print PDF"),
-        ["Report.ExportJson"] = ("Xuất JSON", "Export JSON"),
-        ["Report.SaveSession"] = ("Lưu vào Lịch Sử", "Save to History"),
+        ["Report.Title"] = "Diagnostic Report",
+        ["Report.ExportHtml"] = "Export HTML / Print PDF",
+        ["Report.ExportJson"] = "Export JSON",
+        ["Report.SaveSession"] = "Save to History",
 
-        ["History.Title"] = ("Lịch Sử Kiểm Tra", "Test History"),
-        ["History.Refresh"] = ("Làm mới", "Refresh"),
-        ["History.Clear"] = ("Xóa tất cả", "Clear All"),
+        ["History.Title"] = "Test History",
+        ["History.Refresh"] = "Refresh",
+        ["History.Clear"] = "Clear All",
 
-        ["Settings.Title"] = ("Cài Đặt", "Settings"),
-        ["Settings.Language"] = ("Ngôn ngữ giao diện", "Display Language"),
-        ["Settings.Privilege"] = ("Quyền thực thi hiện tại", "Current Privilege Level")
+        ["Settings.Title"] = "Settings",
+        ["Settings.Privilege"] = "App Permissions (Administrator Mode)"
     };
 
-    public void SetLanguage(AppLanguage language)
-    {
-        if (CurrentLanguage == language) return;
-        CurrentLanguage = language;
-        LanguageChanged?.Invoke(this, EventArgs.Empty);
-    }
+    public string Get(string key) => Table.TryGetValue(key, out string? value) ? value : key;
 
-    public string Get(string key)
-    {
-        if (Table.TryGetValue(key, out var entry))
-            return CurrentLanguage == AppLanguage.Vietnamese ? entry.Vi : entry.En;
-        return key;
-    }
-
-    public string Pick(string vi, string en) => CurrentLanguage == AppLanguage.Vietnamese ? vi : en;
+    internal static IReadOnlyCollection<string> AllKeys => Table.Keys.ToArray();
 }

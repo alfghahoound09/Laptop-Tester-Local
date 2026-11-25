@@ -18,15 +18,24 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _titleText = "";
     [ObservableProperty] private string _subtitleText = "";
     [ObservableProperty] private string _tileHardware = "";
+    [ObservableProperty] private string _tileHardwareSub = "";
     [ObservableProperty] private string _tileBattery = "";
+    [ObservableProperty] private string _tileBatterySub = "";
     [ObservableProperty] private string _tileAntiFake = "";
+    [ObservableProperty] private string _tileAntiFakeSub = "";
     [ObservableProperty] private string _tileBenchmark = "";
+    [ObservableProperty] private string _tileBenchmarkSub = "";
     [ObservableProperty] private string _systemInfoHeader = "";
     [ObservableProperty] private string _aboutTitle = "";
     [ObservableProperty] private string _aboutDesc = "";
     [ObservableProperty] private string _tipText = "";
-    [ObservableProperty] private string _rescanLabel = "Quét lại";
-    [ObservableProperty] private string _quickTestBtnLabel = "Quy Trình / Quick Test (F2)";
+    [ObservableProperty] private string _rescanLabel = "";
+    [ObservableProperty] private string _quickTestBtnLabel = "";
+    [ObservableProperty] private string _featuresHeading = "";
+    [ObservableProperty] private string _peripheralsHeading = "";
+    [ObservableProperty] private string _sessionLabel = "";
+    [ObservableProperty] private string _privilegeLabel = "";
+    [ObservableProperty] private string _vmNotice = "";
 
     [ObservableProperty] private string _modelText = "Scanning...";
     [ObservableProperty] private string _osText = "—";
@@ -37,7 +46,7 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _displayText = "—";
     [ObservableProperty] private string _batteryText = "—";
     [ObservableProperty] private string _privilegeBadge = "Standard User";
-    [ObservableProperty] private string _completedCountText = "0 tests recorded";
+    [ObservableProperty] private string _completedCountText = "0 checks recorded";
 
     public DashboardViewModel(HardwareService hardwareService, LocalizationService loc, TestResultsStore store)
     {
@@ -45,7 +54,6 @@ public partial class DashboardViewModel : ObservableObject
         _loc = loc;
         _store = store;
 
-        _loc.LanguageChanged += (_, _) => RefreshLabels();
         _store.ResultsChanged += (_, _) => RefreshCounts();
         RefreshLabels();
         RefreshCounts();
@@ -70,6 +78,7 @@ public partial class DashboardViewModel : ObservableObject
             DisplayText = s.DisplaySummary;
             BatteryText = s.BatterySummary;
             PrivilegeBadge = s.IsAdministrator ? "Administrator" : "Standard User";
+            VmNotice = s.IsVirtualMachine ? "Running inside a Virtual Machine (VM)" : "";
             _store.Upsert("hardware", "Hardware Scan", "Core", TestStatus.Passed, $"{s.CpuName} · {s.RamSummary}");
         }
         catch (Exception ex)
@@ -90,9 +99,8 @@ public partial class DashboardViewModel : ObservableObject
 
     private void RefreshCounts()
     {
-        CompletedCountText = _loc.Pick(
-            $"{_store.Results.Count} hạng mục đã kiểm tra trong phiên",
-            $"{_store.Results.Count} checks recorded this session");
+        int count = _store.Results.Count;
+        CompletedCountText = $"{count} check{(count == 1 ? "" : "s")} completed this session";
     }
 
     private void RefreshLabels()
@@ -100,15 +108,23 @@ public partial class DashboardViewModel : ObservableObject
         TitleText = _loc.Get("Dashboard.Title");
         SubtitleText = _loc.Get("Dashboard.Subtitle");
         TileHardware = _loc.Get("Dashboard.Tile.Hardware");
+        TileHardwareSub = "CPU, RAM, GPU & screen";
         TileBattery = _loc.Get("Dashboard.Tile.Battery");
+        TileBatterySub = "Health, cycles & 30s drain";
         TileAntiFake = _loc.Get("Dashboard.Tile.AntiFake");
+        TileAntiFakeSub = "Windows vs. BIOS specs";
         TileBenchmark = _loc.Get("Dashboard.Tile.Benchmark");
+        TileBenchmarkSub = "CPU, RAM & cooling test";
         SystemInfoHeader = _loc.Get("Dashboard.SystemInfo");
         AboutTitle = _loc.Get("Dashboard.AboutTitle");
         AboutDesc = _loc.Get("Dashboard.AboutDesc");
         TipText = _loc.Get("Dashboard.Tip");
         RescanLabel = _loc.Get("Dashboard.Rescan");
-        QuickTestBtnLabel = _loc.Pick("Quy Trình / Quick Test (F2)", "Quick Test Wizard (F2)");
+        QuickTestBtnLabel = "Quick Test Wizard (F2)";
+        FeaturesHeading = "Core Diagnostics:";
+        PeripheralsHeading = "Devices & Export:";
+        SessionLabel = "Current Session:";
+        PrivilegeLabel = "Run Mode:";
         RefreshCounts();
     }
 }

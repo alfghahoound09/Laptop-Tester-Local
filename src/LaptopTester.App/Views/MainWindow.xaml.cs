@@ -18,6 +18,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _vm = vm;
         DataContext = vm;
+        StateChanged += OnWindowStateChanged;
 
         vm.Devices.LaunchDisplayFullScreenRequested += mode =>
         {
@@ -34,9 +35,38 @@ public partial class MainWindow : Window
             var hwnd = new WindowInteropHelper(this).Handle;
             int dark = 1;
             DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, ref dark, sizeof(int));
+
+            int corner = 2; // DWMWCP_ROUND (Windows 11 rounded corners)
+            DwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, ref corner, sizeof(int));
+
+            int borderColor = 0x00302626; // COLORREF BGR for #262630
+            DwmSetWindowAttribute(hwnd, 34 /* DWMWA_BORDER_COLOR */, ref borderColor, sizeof(int));
         }
         catch { }
     }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        bool maximized = WindowState == WindowState.Maximized;
+        OuterWindowBorder.Margin = maximized ? new Thickness(7) : new Thickness(0);
+        OuterWindowBorder.BorderThickness = maximized ? new Thickness(0) : new Thickness(1);
+        MaximizeGlyph.Visibility = maximized ? Visibility.Collapsed : Visibility.Visible;
+        RestoreGlyph.Visibility = maximized ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e) =>
+        SystemCommands.MinimizeWindow(this);
+
+    private void MaximizeRestoreButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+            SystemCommands.RestoreWindow(this);
+        else
+            SystemCommands.MaximizeWindow(this);
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e) =>
+        SystemCommands.CloseWindow(this);
 
     private bool IsKeyboardTestActive =>
         _vm.ActiveTab == AppTab.Devices && _vm.Devices.ActiveSection == "Keyboard";

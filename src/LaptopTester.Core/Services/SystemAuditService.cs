@@ -69,18 +69,21 @@ public sealed class SystemAuditService
             foreach (var name in key.GetValueNames())
             {
                 string cmd = key.GetValue(name)?.ToString() ?? "";
-                string risk = cmd.Contains(@"\Temp\", StringComparison.OrdinalIgnoreCase)
-                    || cmd.Contains("powershell", StringComparison.OrdinalIgnoreCase)
-                    || cmd.Contains("wscript", StringComparison.OrdinalIgnoreCase)
-                    ? "Review"
-                    : "Normal";
+                string risk = ClassifyStartupRisk(cmd);
                 entries.Add(new StartupEntryDetails(name, cmd, location, risk));
             }
         }
         catch { }
     }
 
-    private static string DescribeCmError(int code) => code switch
+    internal static string ClassifyStartupRisk(string cmd) =>
+        cmd.Contains(@"\Temp\", StringComparison.OrdinalIgnoreCase)
+            || cmd.Contains("powershell", StringComparison.OrdinalIgnoreCase)
+            || cmd.Contains("wscript", StringComparison.OrdinalIgnoreCase)
+            ? "Review"
+            : "Normal";
+
+    internal static string DescribeCmError(int code) => code switch
     {
         1 => "Device is not configured correctly (Code 1)",
         10 => "Device cannot start (Code 10)",

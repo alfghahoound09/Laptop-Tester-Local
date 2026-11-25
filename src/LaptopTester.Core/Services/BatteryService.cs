@@ -32,11 +32,8 @@ public sealed class BatteryService
     public async Task<BatteryDetails> GetBatteryInfoAsync(CancellationToken ct = default)
     {
         GetSystemPowerStatus(out var sps);
-        bool noSystemBattery = (sps.BatteryFlag & 128) != 0;
-        bool isAc = sps.ACLineStatus == 1;
-        bool isCharging = (sps.BatteryFlag & 8) != 0;
-        int pct = sps.BatteryLifePercent <= 100 ? sps.BatteryLifePercent : 0;
-        int remMinutes = sps.BatteryLifeTime > 0 ? sps.BatteryLifeTime / 60 : 0;
+        var (noSystemBattery, isAc, isCharging, pct, remMinutes) = DecodePowerStatus(
+            sps.ACLineStatus, sps.BatteryFlag, sps.BatteryLifePercent, sps.BatteryLifeTime);
 
         var wmiBatTask = WmiQueryHelper.QueryAsync("SELECT DesignedCapacity, FullChargeCapacity, Chemistry, DeviceID, Name FROM Win32_Battery", ct: ct);
         var staticTask = WmiQueryHelper.QueryAsync("SELECT DesignedCapacity, ManufactureName, SerialNumber, Chemistry FROM BatteryStaticData", @"root\wmi", ct);
@@ -82,7 +79,7 @@ public sealed class BatteryService
             isAc = isAc || WmiQueryHelper.Bool(statusRow, "PowerOnline");
         }
 
-        double health = designed > 0 && full > 0 ? Math.Round(Math.Clamp(full * 100.0 / designed, 0, 120), 1) : 0;
+        double health = ComputeHealthPercent(designed, full);
         double rateWatts = Math.Round((isCharging ? chargeMw : dischargeMw) / 1000.0, 2);
         double volts = Math.Round(voltageMv / 1000.0, 2);
 
@@ -125,13 +122,11 @@ public sealed class BatteryService
                 await Task.Delay(1000, ct);
                 var snap = await GetBatteryInfoAsync(ct);
                 int dropped = Math.Max(0, startPct - snap.ChargePercent);
-                double estMinutes = snap.RateWatts > 0.5 && snap.RemainingCapacityMwh > 0
-                    ? (snap.RemainingCapacityMwh / 1000.0) / snap.RateWatts * 60.0
-                    : dropped > 0 ? sec / 60.0 * (snap.ChargePercent / (double)dropped) : 0;
+                double estMinutes = EstimateRemainingMinutes(snap.RateWatts, snap.RemainingCapacityMwh, sec, snap.ChargePercent, dropped);
 
                 string status = snap.IsOnAcPower
-                    ? "AC adapter plugged in — unplug to measure real drain"
-                    : $"Load running ({workerCount} threads) · {snap.RateWatts:0.0}W";
+                    ? "Charger plugged in — unplug AC power to measure real battery drain"
+                    : $"Battery drain test running ({workerCount} CPU threads) · Current draw: {snap.RateWatts:0.0}W";
 
                 progress.Report(new BatteryStressProgress(
                     sec, durationSeconds, snap.ChargePercent,
@@ -145,7 +140,26 @@ public sealed class BatteryService
         }
     }
 
-    private static string DecodeChemistry(int code) => code switch
+    internal static (bool NoSystemBattery, bool IsAc, bool IsCharging, int Percent, int RemainingMinutes) DecodePowerStatus(
+        byte acLineStatus, byte batteryFlag, byte batteryLifePercent, int batteryLifeTimeSeconds) =>
+        (
+            (batteryFlag & 128) != 0,
+            acLineStatus == 1,
+            (batteryFlag & 8) != 0,
+            batteryLifePercent <= 100 ? batteryLifePercent : 0,
+            batteryLifeTimeSeconds > 0 ? batteryLifeTimeSeconds / 60 : 0
+        );
+
+    internal static double ComputeHealthPercent(int designed, int full) =>
+        designed > 0 && full > 0 ? Math.Round(Math.Clamp(full * 100.0 / designed, 0, 120), 1) : 0;
+
+    internal static double EstimateRemainingMinutes(
+        double rateWatts, int remainingCapacityMwh, int elapsedSeconds, int currentPercent, int droppedPercent) =>
+        rateWatts > 0.5 && remainingCapacityMwh > 0
+            ? (remainingCapacityMwh / 1000.0) / rateWatts * 60.0
+            : droppedPercent > 0 ? elapsedSeconds / 60.0 * (currentPercent / (double)droppedPercent) : 0;
+
+    internal static string DecodeChemistry(int code) => code switch
     {
         3 => "Lead Acid",
         4 => "NiCd",

@@ -195,16 +195,7 @@ public sealed class AudioCameraService : IDisposable
             Marshal.Copy(hdr.lpData, chunk, 0, chunk.Length);
             lock (_recLock) _recordedPcm.Write(chunk, 0, chunk.Length);
 
-            double sumSq = 0;
-            int samples = chunk.Length / 2;
-            for (int i = 0; i < samples; i++)
-            {
-                short s = BitConverter.ToInt16(chunk, i * 2);
-                double norm = s / 32768.0;
-                sumSq += norm * norm;
-            }
-            double rms = Math.Sqrt(sumSq / Math.Max(1, samples));
-            MicrophoneLevelMeasured?.Invoke(this, Math.Min(1.0, rms * 3.2));
+            MicrophoneLevelMeasured?.Invoke(this, ComputeNormalizedRms(chunk));
         }
 
         if (_isRecording && _waveInHandle != IntPtr.Zero)
@@ -264,7 +255,22 @@ public sealed class AudioCameraService : IDisposable
             .ToList();
     }
 
-    private static byte[] BuildStereoWave(bool left, bool right, double startHz, double endHz, double durationSec)
+    internal static double ComputeNormalizedRms(byte[] pcm16)
+    {
+        int samples = pcm16.Length / 2;
+        if (samples <= 0) return 0;
+        double sumSq = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            short s = BitConverter.ToInt16(pcm16, i * 2);
+            double norm = s / 32768.0;
+            sumSq += norm * norm;
+        }
+        double rms = Math.Sqrt(sumSq / samples);
+        return Math.Min(1.0, rms * 3.2);
+    }
+
+    internal static byte[] BuildStereoWave(bool left, bool right, double startHz, double endHz, double durationSec)
     {
         const int sampleRate = 44100;
         int totalSamples = (int)(sampleRate * durationSec);
@@ -292,7 +298,7 @@ public sealed class AudioCameraService : IDisposable
         return ms.ToArray();
     }
 
-    private static byte[] WrapMonoPcmAsWav(byte[] pcm, int sampleRate)
+    internal static byte[] WrapMonoPcmAsWav(byte[] pcm, int sampleRate)
     {
         using var ms = new MemoryStream(44 + pcm.Length);
         using var bw = new BinaryWriter(ms);
@@ -301,7 +307,7 @@ public sealed class AudioCameraService : IDisposable
         return ms.ToArray();
     }
 
-    private static void WriteWavHeader(BinaryWriter bw, int sampleRate, short channels, short bitsPerSample, int dataBytes)
+    internal static void WriteWavHeader(BinaryWriter bw, int sampleRate, short channels, short bitsPerSample, int dataBytes)
     {
         bw.Write("RIFF"u8);
         bw.Write(36 + dataBytes);

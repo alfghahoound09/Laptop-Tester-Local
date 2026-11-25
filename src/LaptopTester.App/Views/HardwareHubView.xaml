@@ -7,14 +7,14 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Sub-navigation pill bar -->
-        <Border Grid.Row="0" Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="14" Padding="5" HorizontalAlignment="Left" Margin="0,0,0,16">
+        <!-- Windows 11 Pivot Sub-Navigation Strip -->
+        <Border Grid.Row="0" Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8" Padding="6" HorizontalAlignment="Left" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal">
-                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="Phần Cứng" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Hardware, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Hardware"/>
-                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="Chống Fake (3 Nguồn)" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=AntiFake, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="AntiFake"/>
-                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="Kiểm Tra Pin" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Battery, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Battery"/>
-                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="Nhiệt Độ &amp; Benchmark" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Thermal, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Thermal"/>
-                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="Ổ Cứng &amp; Hệ Thống" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=StorageAudit, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="StorageAudit"/>
+                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="{Binding TabHardwareLabel}" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Hardware, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Hardware"/>
+                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="{Binding TabAntiFakeLabel}" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=AntiFake, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="AntiFake"/>
+                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="{Binding TabBatteryLabel}" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Battery, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Battery"/>
+                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="{Binding TabThermalLabel}" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=Thermal, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="Thermal"/>
+                <RadioButton Style="{StaticResource SubTabRadioStyle}" Content="{Binding TabStorageAuditLabel}" IsChecked="{Binding ActiveSubTab, Converter={StaticResource EqBool}, ConverterParameter=StorageAudit, Mode=OneWay}" Command="{Binding SelectSubTabCommand}" CommandParameter="StorageAudit"/>
             </StackPanel>
         </Border>
 
@@ -22,24 +22,24 @@
             <StackPanel>
                 <!-- 1. HARDWARE OVERVIEW -->
                 <StackPanel Visibility="{Binding ActiveSubTab, Converter={StaticResource EqVis}, ConverterParameter=Hardware}">
-                    <Grid Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Thông Tin Phần Cứng" Style="{StaticResource PageTitleStyle}"/>
+                            <TextBlock Text="Hardware Specifications" Style="{StaticResource PageTitleStyle}"/>
                             <TextBlock Text="{Binding StatusBanner}" Style="{StaticResource PageSubtitleStyle}"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Quét lại phần cứng" Command="{Binding RefreshHardwareCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="Rescan Hardware" Command="{Binding RefreshHardwareCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
 
                     <UniformGrid Columns="3" Margin="0,0,0,14">
                         <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,0">
                             <StackPanel>
-                                <TextBlock Text="CPU" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding HardwareReport.Cpu.Name}" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" Margin="0,6,0,4"/>
-                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
+                                <TextBlock Text="PROCESSOR (CPU)" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding HardwareReport.Cpu.Name}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,6,0,4"/>
+                                <TextBlock Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
                                     <Run Text="{Binding HardwareReport.Cpu.Cores, Mode=OneWay}"/><Run Text="C / "/>
                                     <Run Text="{Binding HardwareReport.Cpu.Threads, Mode=OneWay}"/><Run Text="T · "/>
                                     <Run Text="{Binding HardwareReport.Cpu.MaxClockMhz, Mode=OneWay}"/><Run Text=" MHz"/>
@@ -48,9 +48,9 @@
                         </Border>
                         <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,0">
                             <StackPanel>
-                                <TextBlock Text="RAM" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding HardwareReport.Summary.RamSummary}" FontSize="15" FontWeight="Bold" Margin="0,6,0,4"/>
-                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
+                                <TextBlock Text="MEMORY (RAM)" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding HardwareReport.Summary.RamSummary}" FontSize="15" FontWeight="SemiBold" Margin="0,6,0,4"/>
+                                <TextBlock Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
                                     <Run Text="Slots: "/><Run Text="{Binding HardwareReport.Ram.UsedSlots, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding HardwareReport.Ram.TotalSlots, Mode=OneWay}"/>
                                     <Run Text=" · Usable: "/><Run Text="{Binding HardwareReport.Ram.UsableGb, Mode=OneWay}"/><Run Text=" GB"/>
                                 </TextBlock>
@@ -58,31 +58,59 @@
                         </Border>
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="MÀN HÌNH &amp; GPU" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding HardwareReport.Summary.GpuSummary}" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" Margin="0,6,0,4"/>
-                                <TextBlock Text="{Binding HardwareReport.Summary.DisplaySummary}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
+                                <TextBlock Text="GRAPHICS &amp; SCREEN" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding HardwareReport.Summary.GpuSummary}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,6,0,4"/>
+                                <TextBlock Text="{Binding HardwareReport.Summary.DisplaySummary}" Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
 
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="CHI TIẾT THANH RAM (SLOTS)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                            <TextBlock Text="GRAPHICS CARDS (INTEGRATED &amp; DEDICATED GPU)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                            <ItemsControl ItemsSource="{Binding Gpus}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="95"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="105"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding AdapterType}" Foreground="{StaticResource AccentOrangeTextBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding VramGb, StringFormat='{}{0:0.##} GB'}" Style="{StaticResource MonoDataStyle}"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding DriverVersion}" Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Resolution}" Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="INSTALLED RAM STICKS (MEMORY MODULES)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding RamModules}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="150"/>
+                                                    <ColumnDefinition Width="160"/>
+                                                    <ColumnDefinition Width="110"/>
                                                     <ColumnDefinition Width="120"/>
-                                                    <ColumnDefinition Width="130"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="{Binding Slot}" FontWeight="SemiBold"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding CapacityGb, StringFormat='{}{0:0.#} GB'}"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding SpeedMhz, StringFormat='{}{0} MHz'}" Foreground="{StaticResource AccentGreenHoverBrush}"/>
-                                                <TextBlock Grid.Column="3" Foreground="{StaticResource TextSecondaryBrush}">
+                                                <TextBlock Grid.Column="1" Text="{Binding CapacityGb, StringFormat='{}{0:0.#} GB'}" Style="{StaticResource MonoDataStyle}"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding SpeedMhz, StringFormat='{}{0} MHz'}" Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource AccentOrangeTextBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="3" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis">
                                                     <Run Text="{Binding MemoryType, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Manufacturer, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding PartNumber, Mode=OneWay}"/>
                                                 </TextBlock>
                                             </Grid>
@@ -93,72 +121,107 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource CardBorderStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Ổ CỨNG &amp; MÀN HÌNH ĐANG KẾT NỐI" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
-                            <ItemsControl ItemsSource="{Binding Drives}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="130"/>
-                                                    <ColumnDefinition Width="110"/>
-                                                    <ColumnDefinition Width="140"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Model}" FontWeight="SemiBold"/>
-                                                <TextBlock Grid.Column="1" Foreground="{StaticResource TextSecondaryBrush}">
-                                                    <Run Text="{Binding InterfaceType, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding MediaCategory, Mode=OneWay}"/>
-                                                </TextBlock>
-                                                <TextBlock Grid.Column="2" Text="{Binding SizeGb, StringFormat='{}{0:0.#} GB'}" FontWeight="SemiBold"/>
-                                                <TextBlock Grid.Column="3" Text="{Binding HealthStatus}" Foreground="{StaticResource AccentGreenHoverBrush}"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="STORAGE DRIVES (SSD / HDD)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding Drives}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="110"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="100"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Model}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                                    <TextBlock Grid.Column="1" Foreground="{StaticResource TextSecondaryBrush}">
+                                                        <Run Text="{Binding InterfaceType, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding MediaCategory, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="2" Text="{Binding SizeGb, StringFormat='{}{0:0.#} GB'}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding HealthStatus}" Foreground="{StaticResource StatusPassBrush}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                            <StackPanel>
+                                <TextBlock Text="SCREEN PANEL DETAILS (BUILT-IN EDID)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding Displays}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="SemiBold">
+                                                        <Run Text="{Binding PanelManufacturer, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding PanelModel, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,3,0,0">
+                                                        <Run Text="{Binding WidthPx, Mode=OneWay}"/><Run Text="x"/><Run Text="{Binding HeightPx, Mode=OneWay}"/>
+                                                        <Run Text=" @ "/><Run Text="{Binding RefreshRateHz, Mode=OneWay}"/><Run Text="Hz · "/>
+                                                        <Run Text="{Binding AspectRatio, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding BitsPerPixel, Mode=OneWay}"/><Run Text="-bit"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </StackPanel>
 
                 <!-- 2. ANTI-FAKE 3-SOURCE AUDIT -->
                 <StackPanel Visibility="{Binding ActiveSubTab, Converter={StaticResource EqVis}, ConverterParameter=AntiFake}">
-                    <Grid Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Chống Giả Mạo Phần Cứng" Style="{StaticResource PageTitleStyle}"/>
-                            <TextBlock Text="Đối chiếu độc lập WMI, Registry và SMBIOS firmware để phát hiện máy sửa thông số" Style="{StaticResource PageSubtitleStyle}"/>
+                            <TextBlock Text="Genuine Hardware Audit (Anti-Fake)" Style="{StaticResource PageTitleStyle}"/>
+                            <TextBlock Text="Compares Windows specs, the Registry, and BIOS firmware to detect edited specs or HDDs disguised as SSDs" Style="{StaticResource PageSubtitleStyle}"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Quét Phát Hiện" Command="{Binding RunAntiFakeScanCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="Run Genuine Spec Check" Command="{Binding RunAntiFakeScanCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
 
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="12" Height="12" Fill="{Binding AntiFakeIsClean, Converter={StaticResource StatusToBrush}}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <Border Background="{Binding AntiFakeIsClean, Converter={StaticResource StatusToBgBrush}}"
+                                    BorderBrush="{Binding AntiFakeIsClean, Converter={StaticResource StatusToBrush}}"
+                                    BorderThickness="1" CornerRadius="12" Width="24" Height="24" Margin="0,0,12,0">
+                                <Ellipse Width="9" Height="9" Fill="{Binding AntiFakeIsClean, Converter={StaticResource StatusToBrush}}"/>
+                            </Border>
                             <TextBlock Text="{Binding AntiFakeBannerText}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="SO SÁNH THÔNG SỐ TỪ NHIỀU NGUỒN (WMI / REGISTRY / SMBIOS)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
-                            <Grid Margin="14,0,14,8">
+                            <TextBlock Text="SPEC COMPARISON: WINDOWS vs. BIOS FIRMWARE" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
+                            <Grid Margin="12,0,12,8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="180"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="THÀNH PHẦN" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Grid.Column="1" Text="WINDOWS / WMI" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Grid.Column="2" Text="REGISTRY / OS" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Grid.Column="3" Text="SMBIOS FIRMWARE" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Grid.Column="4" Text="TRẠNG THÁI" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Grid.Column="0" Text="PART" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Text="WINDOWS REPORTS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="2" Text="REGISTRY / OS API" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="3" Text="BIOS FIRMWARE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="4" Text="RESULT" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding Comparisons}">
                                 <ItemsControl.ItemTemplate>
@@ -166,17 +229,19 @@
                                         <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="110"/>
+                                                    <ColumnDefinition Width="120"/>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="180"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Component}" FontWeight="Bold"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding WmiValue}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding RegistryValue}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="3" Text="{Binding SmbiosValue}" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="4" Text="{Binding Note}" Foreground="{Binding IsConsistent, Converter={StaticResource StatusToBrush}}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="0" Text="{Binding Component}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding WmiValue}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,10,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding RegistryValue}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,10,0"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding SmbiosValue}" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,10,0"/>
+                                                <Border Grid.Column="4" Background="{Binding IsConsistent, Converter={StaticResource StatusToBgBrush}}" BorderBrush="{Binding IsConsistent, Converter={StaticResource StatusToBrush}}" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Note}" Foreground="{Binding IsConsistent, Converter={StaticResource StatusToBrush}}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                </Border>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -187,11 +252,11 @@
 
                     <Border Style="{StaticResource CardBorderStyle}" Visibility="{Binding Indicators.Count, Converter={StaticResource CountVis}}">
                         <StackPanel>
-                            <TextBlock Text="DẤU HIỆU PHÁT HIỆN" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                            <TextBlock Text="DETECTED INDICATORS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding Indicators}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{StaticResource StatusWarnBgBrush}" BorderBrush="#5C441B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                        <Border Background="{StaticResource StatusWarnBgBrush}" BorderBrush="{StaticResource StatusWarnBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,8">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource StatusWarnBrush}"/>
                                                 <TextBlock Text="{Binding Description}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12.5" TextWrapping="Wrap" Margin="0,3,0,0"/>
@@ -206,18 +271,18 @@
 
                 <!-- 3. BATTERY HEALTH & STRESS TEST -->
                 <StackPanel Visibility="{Binding ActiveSubTab, Converter={StaticResource EqVis}, ConverterParameter=Battery}">
-                    <Grid Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Kiểm Tra Pin" Style="{StaticResource PageTitleStyle}"/>
-                            <TextBlock Text="Đánh giá sức khỏe pin, chu kỳ sạc và chạy tải thực tế" Style="{StaticResource PageSubtitleStyle}"/>
+                            <TextBlock Text="Battery Health &amp; Drain Test" Style="{StaticResource PageTitleStyle}"/>
+                            <TextBlock Text="Compares current max charge vs. factory design capacity, checks cycle count, and measures drain under load" Style="{StaticResource PageSubtitleStyle}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Kiểm tra pin" Command="{Binding CheckBatteryCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
-                            <Button Content="Bắt đầu / Dừng Stress Test (30s)" Command="{Binding ToggleBatteryStressCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                            <Button Content="Check Battery" Command="{Binding CheckBatteryCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
+                            <Button Content="{Binding StressButtonText}" Command="{Binding ToggleBatteryStressCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
                         </StackPanel>
                     </Grid>
 
@@ -230,50 +295,50 @@
                         <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
                                 <UniformGrid Columns="2" Margin="0,0,0,14">
-                                    <Border Background="{StaticResource StatusPassBgBrush}" CornerRadius="10" Padding="14" Margin="0,0,8,8">
+                                    <Border Background="{StaticResource StatusPassBgBrush}" BorderBrush="{StaticResource StatusPassBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,8,8">
                                         <StackPanel HorizontalAlignment="Center">
-                                            <TextBlock Text="SỨC KHỎE" Style="{StaticResource SectionEyebrowStyle}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Battery.HealthPercent, StringFormat='{}{0:F0}%'}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="BATTERY HEALTH" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Battery.HealthPercent, StringFormat='{}{0:F0}%'}" FontSize="26" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource StatusPassBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Background="{StaticResource StatusPassBgBrush}" CornerRadius="10" Padding="14" Margin="0,0,0,8">
+                                    <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,8">
                                         <StackPanel HorizontalAlignment="Center">
-                                            <TextBlock Text="CHU KỲ SẠC" Style="{StaticResource SectionEyebrowStyle}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Battery.CycleCount}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="CHARGE CYCLES" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Battery.CycleCount}" FontSize="26" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Background="{StaticResource BgSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,8,0">
+                                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0">
                                         <StackPanel HorizontalAlignment="Center">
-                                            <TextBlock Text="DUNG LƯỢNG THỰC" Style="{StaticResource SectionEyebrowStyle}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Battery.FullChargedCapacityMwh, StringFormat='{}{0} mWh'}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            <TextBlock Text="CURRENT MAX CAPACITY" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Battery.FullChargedCapacityMwh, StringFormat='{}{0} mWh'}" FontSize="16" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Background="{StaticResource BgSurfaceBrush}" CornerRadius="10" Padding="14">
+                                    <Border Style="{StaticResource SubCardBorderStyle}">
                                         <StackPanel HorizontalAlignment="Center">
-                                            <TextBlock Text="MỨC PIN / CÔNG SUẤT" Style="{StaticResource SectionEyebrowStyle}" HorizontalAlignment="Center"/>
-                                            <TextBlock FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                                <Run Text="{Binding Battery.ChargePercent, Mode=OneWay}"/><Run Text="% · "/><Run Text="{Binding Battery.RateWatts, StringFormat='{}{0:0.0}W', Mode=OneWay}"/>
+                                            <TextBlock Text="CHARGE &amp; POWER DRAW" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock FontSize="16" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                                <Run Text="{Binding Battery.ChargePercent, Mode=OneWay}"/><Run Text="% · "/><Run Text="{Binding Battery.RateWatts, StringFormat='{}{0:0.0}W', Mode=OneWay}" Foreground="{StaticResource AccentOrangeTextBrush}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Border>
                                 </UniformGrid>
-                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
-                                    <Run Text="Nhà sản xuất: "/><Run Text="{Binding Battery.Manufacturer, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    <Run Text="  ·  Thiết kế: "/><Run Text="{Binding Battery.DesignedCapacityMwh, Mode=OneWay}"/><Run Text=" mWh"/>
-                                    <Run Text="  ·  Điện áp: "/><Run Text="{Binding Battery.VoltageVolts, StringFormat='{}{0:0.00}V', Mode=OneWay}"/>
+                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" TextWrapping="Wrap">
+                                    <Run Text="Manufacturer: "/><Run Text="{Binding Battery.Manufacturer, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <Run Text="  ·  Design: "/><Run Text="{Binding Battery.DesignedCapacityMwh, Mode=OneWay}"/><Run Text=" mWh"/>
+                                    <Run Text="  ·  Voltage: "/><Run Text="{Binding Battery.VoltageVolts, StringFormat='{}{0:0.00}V', Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                         </Border>
 
                         <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="STRESS TEST PIN &amp; CHECKLIST" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
-                                <TextBlock Text="{Binding StressStatusText}" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <ProgressBar Value="{Binding StressProgressPercent}" Maximum="100" Height="8" Background="{StaticResource BgSurfaceBrush}" Foreground="{StaticResource AccentGreenBrush}" Margin="0,0,0,14"/>
+                                <TextBlock Text="DRAIN STRESS TEST &amp; CHECKLIST" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding StressStatusText}" FontWeight="SemiBold" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                <ProgressBar Value="{Binding StressProgressPercent}" Maximum="100" Style="{StaticResource OrangeProgressBarStyle}" Margin="0,0,0,16"/>
                                 <ItemsControl ItemsSource="{Binding BatteryChecklist}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,0,8"/>
+                                            <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,0,10"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -284,40 +349,44 @@
 
                 <!-- 4. THERMAL & BENCHMARK -->
                 <StackPanel Visibility="{Binding ActiveSubTab, Converter={StaticResource EqVis}, ConverterParameter=Thermal}">
-                    <Grid Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Nhiệt Độ &amp; Benchmark" Style="{StaticResource PageTitleStyle}"/>
+                            <TextBlock Text="Cooling &amp; Speed Benchmark" Style="{StaticResource PageTitleStyle}"/>
                             <TextBlock Text="{Binding BenchmarkStatus}" Style="{StaticResource PageSubtitleStyle}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Đọc nhiệt độ" Command="{Binding RefreshThermalCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
-                            <Button Content="Chạy Benchmark CPU/RAM/Disk" Command="{Binding RunBenchmarkCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}"/>
+                            <Button Content="Check Temperatures" Command="{Binding RefreshThermalCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
+                            <Button Content="Run Benchmark" Command="{Binding RunBenchmarkCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}"/>
                         </StackPanel>
                     </Grid>
 
                     <UniformGrid Columns="3" Margin="0,0,0,14">
                         <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,0">
                             <StackPanel>
-                                <TextBlock Text="CPU BENCHMARK" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding Benchmark.CpuMultiScore, FallbackValue=—, StringFormat='{}Multi: {0:N0}'}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}" Margin="0,6,0,2"/>
-                                <TextBlock Text="{Binding Benchmark.CpuSingleScore, FallbackValue=—, StringFormat='{}Single: {0:N0}'}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="CPU COMPUTE SCORE (PRIME MATH)" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding Benchmark.CpuMultiScore, FallbackValue=—, StringFormat='{}Multi-Core: {0:N0}'}" FontSize="22" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding Benchmark.CpuSingleScore, FallbackValue=—, StringFormat='{}Single-Core: {0:N0}'}" Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,0">
                             <StackPanel>
-                                <TextBlock Text="MEMORY BANDWIDTH" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding Benchmark.MemoryBandwidthGbPerSec, FallbackValue=—, StringFormat='{}{0:0.##} GB/s'}" FontSize="22" FontWeight="Bold" Margin="0,6,0,2"/>
-                                <TextBlock Text="{Binding Thermal.RamUsedPercent, FallbackValue=0, StringFormat='{}RAM Used: {0:0}%'}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="RAM &amp; DRIVE SPEED" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding Benchmark.MemoryBandwidthGbPerSec, FallbackValue=—, StringFormat='{}RAM: {0:0.##} GB/s'}" FontSize="22" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Margin="0,8,0,4"/>
+                                <TextBlock Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5">
+                                    <Run Text="Drive R/W: "/>
+                                    <Run Text="{Binding Benchmark.DiskSeqReadMbPerSec, Mode=OneWay, FallbackValue='—', TargetNullValue='—', StringFormat='{}{0:0.#}'}"/><Run Text=" / "/>
+                                    <Run Text="{Binding Benchmark.DiskSeqWriteMbPerSec, Mode=OneWay, FallbackValue='—', TargetNullValue='—', StringFormat='{}{0:0.#}'}"/><Run Text=" MB/s"/>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="NHIỆT ĐỘ &amp; TẢI" Style="{StaticResource SectionEyebrowStyle}"/>
-                                <TextBlock Text="{Binding Thermal.CpuPackageC, TargetNullValue='N/A (Standard User)', StringFormat='{}CPU: {0:0.#} °C'}" FontSize="20" FontWeight="Bold" Margin="0,6,0,2"/>
+                                <TextBlock Text="TEMPERATURES" Style="{StaticResource SectionEyebrowStyle}"/>
+                                <TextBlock Text="{Binding Thermal.CpuPackageC, TargetNullValue='N/A (Run as Admin)', StringFormat='{}CPU: {0:0.#} °C'}" FontSize="20" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding Thermal.SourceNote}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" FontSize="12"/>
                             </StackPanel>
                         </Border>
@@ -326,18 +395,18 @@
 
                 <!-- 5. STORAGE SPEED & SYSTEM AUDIT -->
                 <StackPanel Visibility="{Binding ActiveSubTab, Converter={StaticResource EqVis}, ConverterParameter=StorageAudit}">
-                    <Grid Margin="0,0,0,14">
+                    <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Ổ Cứng, Driver &amp; Startup Audit" Style="{StaticResource PageTitleStyle}"/>
+                            <TextBlock Text="Drive Speed, Drivers &amp; Startup Check" Style="{StaticResource PageTitleStyle}"/>
                             <TextBlock Text="{Binding StorageBenchResult}" Style="{StaticResource PageSubtitleStyle}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Đo tốc độ Ổ cứng (128MB)" Command="{Binding RunStorageSpeedTestCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"/>
-                            <Button Content="Quét Driver &amp; Startup" Command="{Binding RunSystemAuditCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <Button Content="Check Drivers &amp; Startup" Command="{Binding RunSystemAuditCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
+                            <Button Content="Test Drive Speed (128 MB)" Command="{Binding RunStorageSpeedTestCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" Style="{StaticResource PrimaryButtonStyle}"/>
                         </StackPanel>
                     </Grid>
 
@@ -349,14 +418,17 @@
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="DRIVER ERRORS (WIN32_PNPENTITY)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <TextBlock Text="HARDWARE DRIVER ERRORS (DEVICE MANAGER)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <Border Style="{StaticResource SubCardBorderStyle}" Visibility="{Binding DriverIssues.Count, Converter={StaticResource ZeroVis}}">
+                                    <TextBlock Text="No driver problems reported (click 'Check Drivers &amp; Startup' to scan)." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </Border>
                                 <ItemsControl ItemsSource="{Binding DriverIssues}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding DeviceName}" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Description}" Foreground="{StaticResource StatusWarnBrush}" FontSize="12.5"/>
+                                                    <TextBlock Text="{Binding Description}" Foreground="{StaticResource StatusWarnBrush}" FontSize="12.5" Margin="0,3,0,0"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -366,15 +438,18 @@
                         </Border>
                         <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
-                                <TextBlock Text="STARTUP PROGRAMS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                                <TextBlock Text="APPS THAT START WITH WINDOWS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                                 <ItemsControl ItemsSource="{Binding StartupEntries}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Location}" Foreground="{StaticResource AccentGreenHoverBrush}" FontSize="11.5"/>
-                                                    <TextBlock Text="{Binding Command}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11.5" TextTrimming="CharacterEllipsis"/>
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding RiskLevel}" HorizontalAlignment="Right" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding Location}" Foreground="{StaticResource AccentOrangeTextBrush}" FontSize="11.5" Margin="0,2,0,2"/>
+                                                    <TextBlock Text="{Binding Command}" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11.5" TextTrimming="CharacterEllipsis"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

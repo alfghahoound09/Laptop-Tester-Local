@@ -83,20 +83,20 @@ public sealed class HistoryReportService
         };
         string verdictColor = session.Verdict switch
         {
-            VerdictBand.Good => "#1DB954",
-            VerdictBand.ConsiderCarefully => "#F59E0B",
+            VerdictBand.Good => "#22C55E",
+            VerdictBand.ConsiderCarefully => "#FACC15",
             _ => "#EF4444"
         };
 
         var sb = new StringBuilder();
         sb.AppendLine("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">");
         sb.AppendLine($"<title>LaptopTester Report - {WebUtility.HtmlEncode(session.MachineModel)}</title>");
-        sb.AppendLine("<style>body{font-family:'Segoe UI',system-ui,sans-serif;background:#121212;color:#F3F4F6;margin:0;padding:32px;}");
-        sb.AppendLine(".wrap{max-width:920px;margin:0 auto;}.card{background:#181818;border:1px solid #2A2A2A;border-radius:12px;padding:20px;margin-bottom:18px;}");
-        sb.AppendLine("h1{margin:0 0 6px;font-size:24px;}h2{margin:0 0 12px;font-size:16px;color:#A1A1AA;text-transform:uppercase;letter-spacing:.05em;}");
-        sb.AppendLine("table{width:100%;border-collapse:collapse;}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #262626;font-size:14px;}");
-        sb.AppendLine(".badge{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:600;font-size:12px;}");
-        sb.AppendLine("@media print{body{background:#fff;color:#111;}.card{background:#fff;border-color:#ddd;}th,td{border-color:#ddd;}}</style></head><body><div class=\"wrap\">");
+        sb.AppendLine("<style>body{font-family:'Segoe UI Variable','Segoe UI',system-ui,sans-serif;background:#060608;color:#FAFAFA;margin:0;padding:32px;}");
+        sb.AppendLine(".wrap{max-width:920px;margin:0 auto;}.card{background:#101015;border:1px solid #262630;border-radius:10px;padding:20px;margin-bottom:16px;}");
+        sb.AppendLine("h1{margin:0 0 6px;font-size:24px;color:#FAFAFA;}h2{margin:0 0 12px;font-size:13px;color:#FB923C;text-transform:uppercase;letter-spacing:.06em;}");
+        sb.AppendLine("table{width:100%;border-collapse:collapse;}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #22222A;font-size:14px;}");
+        sb.AppendLine(".badge{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:600;font-size:12px;}");
+        sb.AppendLine("@media print{body{background:#fff;color:#111;}.card{background:#fff;border-color:#ddd;}h1{color:#111;}h2{color:#C2410C;}th,td{border-color:#ddd;}}</style></head><body><div class=\"wrap\">");
         sb.AppendLine($"<div class=\"card\"><h1>LaptopTester Diagnostic Report</h1>");
         sb.AppendLine($"<p style=\"color:#A1A1AA\">{WebUtility.HtmlEncode(session.MachineModel)} &middot; {session.Timestamp:yyyy-MM-dd HH:mm}</p>");
         sb.AppendLine($"<p><span class=\"badge\" style=\"background:{verdictColor}22;color:{verdictColor};border:1px solid {verdictColor}\">Score: {session.FinalScore}/100 &mdash; {verdictLabel}</span></p>");

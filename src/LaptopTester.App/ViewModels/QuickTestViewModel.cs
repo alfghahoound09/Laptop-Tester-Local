@@ -9,12 +9,13 @@ namespace LaptopTester.App.ViewModels;
 
 public partial class WizardStepItem : ObservableObject
 {
-    public WizardStepItem(string id, string title, int weight, string? deviceTarget)
+    public WizardStepItem(string id, string title, int weight, string? deviceTarget, string pendingSummary)
     {
         Id = id;
         Title = title;
         Weight = weight;
         DeviceTarget = deviceTarget;
+        _summary = pendingSummary;
     }
 
     public string Id { get; }
@@ -23,7 +24,7 @@ public partial class WizardStepItem : ObservableObject
     public string? DeviceTarget { get; }
 
     [ObservableProperty] private TestStatus _status = TestStatus.Pending;
-    [ObservableProperty] private string _summary = "Chưa kiểm tra";
+    [ObservableProperty] private string _summary;
 }
 
 public partial class QuickTestViewModel : ObservableObject
@@ -42,8 +43,19 @@ public partial class QuickTestViewModel : ObservableObject
 
     [ObservableProperty] private bool _isRunningAuto;
     [ObservableProperty] private int _currentScore = 100;
-    [ObservableProperty] private string _verdictText = "Sẵn sàng kiểm tra";
+    [ObservableProperty] private int _checkedCount;
+    [ObservableProperty] private string _verdictText = "";
     [ObservableProperty] private VerdictBand _verdictBand = VerdictBand.Good;
+
+    [ObservableProperty] private string _titleText = "";
+    [ObservableProperty] private string _subtitleText = "";
+    [ObservableProperty] private string _runAutoLabel = "";
+    [ObservableProperty] private string _saveLabel = "";
+    [ObservableProperty] private string _passLabel = "";
+    [ObservableProperty] private string _failLabel = "";
+    [ObservableProperty] private string _skipLabel = "";
+    [ObservableProperty] private string _openTestLabel = "";
+    [ObservableProperty] private string _verdictEyebrow = "";
 
     public ObservableCollection<WizardStepItem> Steps { get; } = new();
 
@@ -68,15 +80,29 @@ public partial class QuickTestViewModel : ObservableObject
         _store = store;
         _loc = loc;
 
+        RefreshLabels();
         BuildSteps();
         _store.ResultsChanged += (_, _) => SyncFromStore();
-        _loc.LanguageChanged += (_, _) => BuildSteps();
+    }
+
+    private void RefreshLabels()
+    {
+        TitleText = _loc.Get("QuickTest.Title");
+        SubtitleText = _loc.Get("QuickTest.Subtitle");
+        RunAutoLabel = _loc.Get("QuickTest.RunAuto");
+        SaveLabel = _loc.Get("Report.SaveSession");
+        PassLabel = _loc.Get("QuickTest.Pass");
+        FailLabel = _loc.Get("QuickTest.Fail");
+        SkipLabel = _loc.Get("QuickTest.Skip");
+        OpenTestLabel = "Open Test";
+        VerdictEyebrow = "OVERALL VERDICT";
     }
 
     private void BuildSteps()
     {
         Steps.Clear();
-        foreach (var (id, vi, en, weight) in QuickTestEngine.StandardSteps)
+        const string pendingText = "Not tested yet";
+        foreach (var (id, title, weight) in QuickTestEngine.StandardSteps)
         {
             string? target = id switch
             {
@@ -89,7 +115,7 @@ public partial class QuickTestViewModel : ObservableObject
                 "connectivity" => "Connectivity",
                 _ => null
             };
-            Steps.Add(new WizardStepItem(id, _loc.Pick(vi, en), weight, target));
+            Steps.Add(new WizardStepItem(id, title, weight, target, pendingText));
         }
         SyncFromStore();
     }
@@ -172,11 +198,12 @@ public partial class QuickTestViewModel : ObservableObject
             deductions,
             "Quick Test Wizard session");
         await _historyService.SaveSessionAsync(session);
-        VerdictText = $"Saved ({session.Id}) — {CurrentScore}/100";
+        VerdictText = $"Saved ({session.Id}) — Score {CurrentScore}/100";
     }
 
     private void SyncFromStore()
     {
+        int done = 0;
         foreach (var step in Steps)
         {
             var r = _store.Get(step.Id);
@@ -184,8 +211,10 @@ public partial class QuickTestViewModel : ObservableObject
             {
                 step.Status = r.Status;
                 step.Summary = r.Summary;
+                if (r.Status != TestStatus.Pending) done++;
             }
         }
+        CheckedCount = done;
         var (score, verdict, _) = _engine.Evaluate(_store.Results);
         CurrentScore = score;
         VerdictBand = verdict;

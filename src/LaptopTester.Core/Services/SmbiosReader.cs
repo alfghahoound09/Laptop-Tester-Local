@@ -47,7 +47,18 @@ public static class SmbiosReader
     {
         try
         {
-            byte[]? buffer = ReadViaFirmwareApi() ?? ReadViaRegistryFallback();
+            return Parse(ReadViaFirmwareApi() ?? ReadViaRegistryFallback());
+        }
+        catch
+        {
+            return Empty();
+        }
+    }
+
+    internal static SmbiosSnapshot Parse(byte[]? buffer)
+    {
+        try
+        {
             if (buffer is null || buffer.Length <= 8)
                 return Empty();
 
@@ -110,8 +121,8 @@ public static class SmbiosReader
                         {
                             int cores2 = BitConverter.ToUInt16(buffer, pos + 0x2A);
                             int threads2 = BitConverter.ToUInt16(buffer, pos + 0x2E);
-                            if (cores2 > cpuCores) cpuCores = cores2;
-                            if (threads2 > cpuThreads) cpuThreads = threads2;
+                            if ((cpuCores == 0xFF && cores2 > 0) || cores2 > cpuCores) cpuCores = cores2;
+                            if ((cpuThreads == 0xFF && threads2 > 0) || threads2 > cpuThreads) cpuThreads = threads2;
                         }
                         break;
 
@@ -236,7 +247,7 @@ public static class SmbiosReader
     private static string GetString(IReadOnlyList<string> table, byte index) =>
         index > 0 && index <= table.Count ? table[index - 1] : string.Empty;
 
-    private static string DecodeMemoryType(byte code) => code switch
+    internal static string DecodeMemoryType(byte code) => code switch
     {
         0x14 => "DDR",
         0x15 => "DDR2",

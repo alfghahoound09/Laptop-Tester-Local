@@ -1,37 +1,54 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Palette: Spotify-inspired neutral zinc dark surfaces + single locked green accent -->
-    <Color x:Key="BgPrimaryColor">#121212</Color>
-    <Color x:Key="BgCardColor">#181818</Color>
-    <Color x:Key="BgSurfaceColor">#202020</Color>
-    <Color x:Key="BgHoverColor">#2A2A2A</Color>
-    <Color x:Key="BorderSubtleColor">#2C2C2E</Color>
+    <!-- Palette: Windows 11 Fluent Deep Black (OLED) + Vibrant Signal Orange -->
+    <Color x:Key="BgPrimaryColor">#060608</Color>
+    <Color x:Key="BgNavRailColor">#0B0B0F</Color>
+    <Color x:Key="BgWorkspaceColor">#09090D</Color>
+    <Color x:Key="BgCardColor">#101015</Color>
+    <Color x:Key="BgSurfaceColor">#17171E</Color>
+    <Color x:Key="BgHoverColor">#22222B</Color>
+    <Color x:Key="BgPressedColor">#131319</Color>
+    <Color x:Key="BorderSubtleColor">#262630</Color>
+    <Color x:Key="BorderStrongColor">#383846</Color>
 
-    <Color x:Key="AccentGreenColor">#1DB954</Color>
-    <Color x:Key="AccentGreenHoverColor">#22C55E</Color>
-    <Color x:Key="AccentGreenMutedColor">#173322</Color>
+    <Color x:Key="AccentOrangeColor">#FF6B1A</Color>
+    <Color x:Key="AccentOrangeHoverColor">#FF853D</Color>
+    <Color x:Key="AccentOrangePressedColor">#E0560C</Color>
+    <Color x:Key="AccentOrangeTextColor">#FB923C</Color>
+    <Color x:Key="AccentOrangeMutedColor">#241208</Color>
+    <Color x:Key="AccentOrangeBorderColor">#7C3612</Color>
 
-    <Color x:Key="TextPrimaryColor">#F4F4F5</Color>
-    <Color x:Key="TextSecondaryColor">#A1A1AA</Color>
-    <Color x:Key="TextMutedColor">#8E8E93</Color>
+    <Color x:Key="TextPrimaryColor">#FAFAFA</Color>
+    <Color x:Key="TextSecondaryColor">#B4B4C0</Color>
+    <Color x:Key="TextMutedColor">#8E8E9B</Color>
 
     <Color x:Key="StatusPassColor">#22C55E</Color>
-    <Color x:Key="StatusPassBgColor">#163322</Color>
-    <Color x:Key="StatusWarnColor">#F59E0B</Color>
-    <Color x:Key="StatusWarnBgColor">#332714</Color>
+    <Color x:Key="StatusPassBgColor">#0F2618</Color>
+    <Color x:Key="StatusPassBorderColor">#1E5634</Color>
+    <Color x:Key="StatusWarnColor">#FACC15</Color>
+    <Color x:Key="StatusWarnBgColor">#29210A</Color>
+    <Color x:Key="StatusWarnBorderColor">#6B5414</Color>
     <Color x:Key="StatusFailColor">#EF4444</Color>
-    <Color x:Key="StatusFailBgColor">#38181A</Color>
+    <Color x:Key="StatusFailBgColor">#2C1215</Color>
+    <Color x:Key="StatusFailBorderColor">#6F2429</Color>
 
     <SolidColorBrush x:Key="BgPrimaryBrush" Color="{StaticResource BgPrimaryColor}"/>
+    <SolidColorBrush x:Key="BgNavRailBrush" Color="{StaticResource BgNavRailColor}"/>
+    <SolidColorBrush x:Key="BgWorkspaceBrush" Color="{StaticResource BgWorkspaceColor}"/>
     <SolidColorBrush x:Key="BgCardBrush" Color="{StaticResource BgCardColor}"/>
     <SolidColorBrush x:Key="BgSurfaceBrush" Color="{StaticResource BgSurfaceColor}"/>
     <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="BgPressedBrush" Color="{StaticResource BgPressedColor}"/>
     <SolidColorBrush x:Key="BorderSubtleBrush" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}"/>
 
-    <SolidColorBrush x:Key="AccentGreenBrush" Color="{StaticResource AccentGreenColor}"/>
-    <SolidColorBrush x:Key="AccentGreenHoverBrush" Color="{StaticResource AccentGreenHoverColor}"/>
-    <SolidColorBrush x:Key="AccentGreenMutedBrush" Color="{StaticResource AccentGreenMutedColor}"/>
+    <SolidColorBrush x:Key="AccentOrangeBrush" Color="{StaticResource AccentOrangeColor}"/>
+    <SolidColorBrush x:Key="AccentOrangeHoverBrush" Color="{StaticResource AccentOrangeHoverColor}"/>
+    <SolidColorBrush x:Key="AccentOrangePressedBrush" Color="{StaticResource AccentOrangePressedColor}"/>
+    <SolidColorBrush x:Key="AccentOrangeTextBrush" Color="{StaticResource AccentOrangeTextColor}"/>
+    <SolidColorBrush x:Key="AccentOrangeMutedBrush" Color="{StaticResource AccentOrangeMutedColor}"/>
+    <SolidColorBrush x:Key="AccentOrangeBorderBrush" Color="{StaticResource AccentOrangeBorderColor}"/>
 
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
@@ -39,28 +56,35 @@
 
     <SolidColorBrush x:Key="StatusPassBrush" Color="{StaticResource StatusPassColor}"/>
     <SolidColorBrush x:Key="StatusPassBgBrush" Color="{StaticResource StatusPassBgColor}"/>
+    <SolidColorBrush x:Key="StatusPassBorderBrush" Color="{StaticResource StatusPassBorderColor}"/>
     <SolidColorBrush x:Key="StatusWarnBrush" Color="{StaticResource StatusWarnColor}"/>
     <SolidColorBrush x:Key="StatusWarnBgBrush" Color="{StaticResource StatusWarnBgColor}"/>
+    <SolidColorBrush x:Key="StatusWarnBorderBrush" Color="{StaticResource StatusWarnBorderColor}"/>
     <SolidColorBrush x:Key="StatusFailBrush" Color="{StaticResource StatusFailColor}"/>
     <SolidColorBrush x:Key="StatusFailBgBrush" Color="{StaticResource StatusFailBgColor}"/>
+    <SolidColorBrush x:Key="StatusFailBorderBrush" Color="{StaticResource StatusFailBorderColor}"/>
 
-    <!-- Accessible Focus Visual -->
+    <!-- Global Typography Defaults -->
+    <FontFamily x:Key="UiFontFamily">Segoe UI Variable Text, Segoe UI, sans-serif</FontFamily>
+    <FontFamily x:Key="MonoFontFamily">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+    <!-- Accessible Keyboard Focus Visual (WCAG visible focus ring) -->
     <Style x:Key="AccessibleFocusVisual">
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border BorderBrush="{StaticResource AccentGreenHoverBrush}" BorderThickness="2" CornerRadius="8" Margin="-2"/>
+                    <Border BorderBrush="{StaticResource AccentOrangeHoverBrush}" BorderThickness="2" CornerRadius="6" Margin="-2"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <!-- Card Container Style (Shape lock: 12px cards) -->
+    <!-- Windows 11 Fluent Card Surfaces -->
     <Style x:Key="CardBorderStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="18"/>
     </Style>
 
@@ -68,47 +92,121 @@
         <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style x:Key="AccentCardBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource AccentOrangeMutedBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentOrangeBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="14"/>
     </Style>
 
-    <!-- Typography -->
+    <!-- Typography Styles -->
     <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="FontSize" Value="24"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
     </Style>
 
     <Style x:Key="PageSubtitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="FontSize" Value="13.5"/>
         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
         <Setter Property="Margin" Value="0,4,0,0"/>
     </Style>
 
     <Style x:Key="SectionEyebrowStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
+        <Setter Property="FontSize" Value="11.5"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentOrangeTextBrush}"/>
     </Style>
 
-    <!-- Buttons (Shape lock: 8px secondary, pill 18px nav/primary) -->
+    <Style x:Key="MonoDataStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MonoFontFamily}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Windows 11 Caption Buttons -->
+    <Style x:Key="WindowCaptionButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="WindowCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowCaptionButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#C42B1C"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#A52418"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Fluent Buttons (6px radius, 1px hairline border, clear hover/pressed feedback) -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentGreenBrush}"/>
-        <Setter Property="Foreground" Value="#09150D"/>
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
+        <Setter Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+        <Setter Property="Foreground" Value="#09090B"/>
+        <Setter Property="BorderBrush" Value="#FFA26B"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Padding" Value="16,9"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="34"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentGreenHoverBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentOrangeHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentOrangePressedBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentOrangeBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bd" Property="Opacity" Value="0.45"/>
@@ -120,24 +218,30 @@
     </Style>
 
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="MinHeight" Value="34"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#4A4A5B"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgPressedBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bd" Property="Opacity" Value="0.45"/>
@@ -148,33 +252,100 @@
         </Setter>
     </Style>
 
-    <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource StatusFailBgBrush}"/>
-        <Setter Property="BorderBrush" Value="#5C2326"/>
-        <Setter Property="Foreground" Value="#FCA5A5"/>
+    <Style x:Key="TileButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
+        <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentOrangeBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgPressedBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentOrangeBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <Style x:Key="NavTabRadioStyle" TargetType="RadioButton">
+    <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource StatusFailBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource StatusFailBorderBrush}"/>
+        <Setter Property="Foreground" Value="#FCA5A5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#3E191D"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#EF4444"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#250F12"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Windows 11 NavigationView Left-Rail Item -->
+    <Style x:Key="NavRailRadioStyle" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="13.5"/>
         <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Margin" Value="8,2"/>
+        <Setter Property="Padding" Value="14,9"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" Background="Transparent" CornerRadius="16" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6">
+                        <Grid>
+                            <Border x:Name="ActivePill"
+                                    Width="3" Height="18"
+                                    CornerRadius="2"
+                                    Background="{StaticResource AccentOrangeBrush}"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="3,0,0,0"
+                                    Visibility="Collapsed"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentGreenBrush}"/>
-                            <Setter Property="Foreground" Value="#081A0E"/>
+                            <Setter TargetName="Bd" Property="Background" Value="#1B1B23"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+                            <Setter TargetName="ActivePill" Property="Visibility" Value="Visible"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -183,26 +354,243 @@
         </Setter>
     </Style>
 
-    <Style x:Key="SubTabRadioStyle" TargetType="RadioButton" BasedOn="{StaticResource NavTabRadioStyle}">
-        <Setter Property="Padding" Value="12,6"/>
-        <Setter Property="FontSize" Value="12.5"/>
+    <!-- Windows 11 Pivot / Sub-Tab Control with Orange Active Underline -->
+    <Style x:Key="SubTabRadioStyle" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Margin" Value="0,0,4,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Grid>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,3"/>
+                            <Border x:Name="Underline" Height="2.5" CornerRadius="1.5" Background="Transparent" VerticalAlignment="Bottom" Margin="4,0,4,-5"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1B1B23"/>
+                            <Setter TargetName="Underline" Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
+    <!-- Windows 11 Fluent TextBox with bottom Orange Focus Accent -->
     <Style x:Key="DarkTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource AccentGreenHoverBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource AccentOrangeHoverBrush}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource AccentOrangeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="Padding" Value="10,8"/>
         <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                        <Grid>
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                            <Border x:Name="FocusBar" Height="2" VerticalAlignment="Bottom" Background="Transparent" CornerRadius="0,0,5,5"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1D1D25"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#14141A"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+                            <Setter TargetName="FocusBar" Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
+    <!-- Windows 11 Fluent CheckBox -->
     <Style x:Key="DarkCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="4" BorderThickness="1"
+                                Background="{StaticResource BgSurfaceBrush}"
+                                BorderBrush="{StaticResource BorderStrongBrush}"
+                                VerticalAlignment="Center" Margin="0,0,10,0">
+                            <Path x:Name="CheckMark"
+                                  Data="M3.5,8.5 L7,12 L13.5,4.5"
+                                  Stroke="#060608" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Visibility="Collapsed"/>
+                        </Border>
+                        <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentOrangeHoverBrush}"/>
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentOrangeHoverBrush}"/>
+                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Windows 11 Fluent ProgressBar -->
+    <Style x:Key="OrangeProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="Background" Value="{StaticResource BgHoverBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentOrangeBrush}"/>
+        <Setter Property="Height" Value="7"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid MinHeight="6">
+                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3.5"/>
+                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3.5" HorizontalAlignment="Left"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Implicit Windows 11 Thin Dark ScrollBar -->
+    <Style x:Key="ScrollThumbStyle" TargetType="Thumb">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="ThumbBd" Background="#363644" CornerRadius="4" Margin="2"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ThumbBd" Property="Background" Value="#525266"/>
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="ThumbBd" Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ScrollPageButtonStyle" TargetType="RepeatButton">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Rectangle Fill="Transparent"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Width" Value="10"/>
+        <Setter Property="MinWidth" Value="10"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="Transparent">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource ScrollPageButtonStyle}" Command="ScrollBar.PageUpCommand"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource ScrollThumbStyle}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource ScrollPageButtonStyle}" Command="ScrollBar.PageDownCommand"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Width" Value="Auto"/>
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="Height" Value="10"/>
+                <Setter Property="MinHeight" Value="10"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Grid Background="Transparent">
+                                <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource ScrollPageButtonStyle}" Command="ScrollBar.PageLeftCommand"/>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource ScrollThumbStyle}"/>
+                                    </Track.Thumb>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource ScrollPageButtonStyle}" Command="ScrollBar.PageRightCommand"/>
+                                    </Track.IncreaseRepeatButton>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Implicit Dark ToolTip -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="#1B1B24"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="FontFamily" Value="{StaticResource UiFontFamily}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Vector Geometries (No emoji icons in chrome) -->
@@ -217,5 +605,16 @@
     <Geometry x:Key="IconShield">M12,2 L4,5 V11.09 C4,16.14 7.41,20.85 12,22 C16.59,20.85 20,16.14 20,11.09 V5 Z M11,16 L7,12 L8.41,10.59 L11,13.17 L15.59,8.59 L17,10 Z</Geometry>
     <Geometry x:Key="IconGauge">M12,4 A9,9 0 0,0 3,13 C3,15.63 4.13,18 5.93,19.65 L7.34,18.24 C5.9,16.96 5,15.09 5,13 A7,7 0 0,1 19,13 C19,15.09 18.1,16.96 16.66,18.24 L18.07,19.65 C19.87,18 21,15.63 21,13 A9,9 0 0,0 12,4 Z M12,11 L16.5,7.5 L15.3,6.1 L10.9,9.9 A2,2 0 1,0 13.4,13 A2,2 0 0,0 12,11 Z</Geometry>
     <Geometry x:Key="IconSettings">M12,15.5 A3.5,3.5 0 0,1 8.5,12 A3.5,3.5 0 0,1 12,8.5 A3.5,3.5 0 0,1 15.5,12 A3.5,3.5 0 0,1 12,15.5 Z M19.43,12.97 C19.47,12.65 19.5,12.33 19.5,12 C19.5,11.67 19.47,11.34 19.43,11 L21.54,9.37 C21.73,9.22 21.78,8.95 21.66,8.73 L19.66,5.27 C19.54,5.05 19.27,4.96 19.05,5.05 L16.56,6.05 C16.04,5.66 15.5,5.32 14.87,5.07 L14.5,2.42 C14.46,2.18 14.25,2 14,2 H10 C9.75,2 9.54,2.18 9.5,2.42 L9.13,5.07 C8.5,5.32 7.96,5.66 7.44,6.05 L4.95,5.05 C4.73,4.96 4.46,5.05 4.34,5.27 L2.34,8.73 C2.21,8.95 2.27,9.22 2.46,9.37 L4.57,11 C4.53,11.34 4.5,11.67 4.5,12 C4.5,12.33 4.53,12.65 4.57,12.97 L2.46,14.63 C2.27,14.78 2.21,15.05 2.34,15.27 L4.34,18.73 C4.46,18.95 4.73,19.03 4.95,18.95 L7.44,17.94 C7.96,18.34 8.5,18.68 9.13,18.93 L9.5,21.58 C9.54,21.82 9.75,22 10,22 H14 C14.25,22 14.46,21.82 14.5,21.58 L14.87,18.93 C15.5,18.67 16.04,18.34 16.56,17.94 L19.05,18.95 C19.27,19.03 19.54,18.95 19.66,18.73 L21.66,15.27 C21.78,15.05 21.73,14.78 21.54,14.63 Z</Geometry>
+    <Geometry x:Key="IconDisplay">M3,4 H21 C22.1,4 23,4.9 23,6 V16 C23,17.1 22.1,18 21,18 H14 V20 H17 V22 H7 V20 H10 V18 H3 C1.9,18 1,17.1 1,16 V6 C1,4.9 1.9,4 3,4 Z M3,6 V16 H21 V6 Z</Geometry>
+    <Geometry x:Key="IconTouchpad">M4,4 H20 C21.1,4 22,4.9 22,6 V18 C22,19.1 21.1,20 20,20 H4 C2.9,20 2,19.1 2,18 V6 C2,4.9 2.9,4 4,4 Z M4,6 V14 H20 V6 Z M4,16 V18 H11.5 V16 Z M12.5,16 V18 H20 V16 Z</Geometry>
+    <Geometry x:Key="IconSpeaker">M3,9 V15 H7 L12,20 V4 L7,9 Z M16.5,12 C16.5,10.23 15.48,8.71 14,7.97 V16.02 C15.48,15.29 16.5,13.77 16.5,12 Z M14,3.23 V5.29 C16.89,6.15 19,8.83 19,12 C19,15.17 16.89,17.85 14,18.71 V20.77 C18.01,19.86 21,16.28 21,12 C21,7.72 18.01,4.14 14,3.23 Z</Geometry>
+    <Geometry x:Key="IconUsb">M15,7 V11 H16 V13 H13 V5 H15 L12,1 L9,5 H11 V13 H8 V10.93 C8.7,10.56 9.2,9.84 9.2,9 C9.2,7.78 8.22,6.8 7,6.8 C5.78,6.8 4.8,7.78 4.8,9 C4.8,9.84 5.3,10.56 6,10.93 V13 C6,14.1 6.9,15 8,15 H11 V18.05 C10.29,18.42 9.8,19.15 9.8,20 C9.8,21.21 10.79,22.2 12,22.2 C13.21,22.2 14.2,21.21 14.2,20 C14.2,19.15 13.71,18.42 13,18.05 V15 H16 C17.1,15 18,14.1 18,13 V11 H19 V7 Z</Geometry>
+    <Geometry x:Key="IconWifi">M1,9 L3,11 C7.97,6.03 16.03,6.03 21,11 L23,9 C16.93,2.93 7.08,2.93 1,9 Z M9,17 L12,20 L15,17 C13.35,15.34 10.66,15.34 9,17 Z M5,13 L7,15 C9.76,12.24 14.24,12.24 17,15 L19,13 C15.14,9.14 8.87,9.14 5,13 Z</Geometry>
+    <Geometry x:Key="IconCamera">M17,10.5 V7 C17,6.45 16.55,6 16,6 H4 C3.45,6 3,6.45 3,7 V17 C3,17.55 3.45,18 4,18 H16 C16.55,18 17,17.55 17,17 V13.5 L21,17.5 V6.5 L17,10.5 Z</Geometry>
+    <Geometry x:Key="IconPower">M13,2 L4,14 H11 L10,22 L20,10 H13 L13,2 Z</Geometry>
+    <Geometry x:Key="IconWrench">M22.7,19 L13.6,9.9 C14.5,7.6 14,4.9 12.1,3 C10.1,1 7.1,0.6 4.7,1.7 L9,6 L6,9 L1.6,4.7 C0.4,7.1 0.9,10.1 2.9,12.1 C4.8,14 7.5,14.5 9.8,13.6 L18.9,22.7 C19.3,23.1 19.9,23.1 20.3,22.7 L22.6,20.4 C23.1,20 23.1,19.3 22.7,19 Z</Geometry>
+    <Geometry x:Key="IconMenu">M3,6 H21 V8 H3 Z M3,11 H21 V13 H3 Z M3,16 H21 V18 H3 Z</Geometry>
+    <Geometry x:Key="IconBack">M20,11 V13 H8 L13.5,18.5 L12.08,19.92 L4.16,12 L12.08,4.08 L13.5,5.5 L8,11 H20 Z</Geometry>
+    <Geometry x:Key="IconChevronRight">M8.59,16.58 L13.17,12 L8.59,7.41 L10,6 L16,12 L10,18 Z</Geometry>
 
 </ResourceDictionary>

@@ -11,9 +11,13 @@
             <conv:InverseBoolConverter x:Key="InverseBool"/>
             <conv:NullToVisibilityConverter x:Key="NullToVis"/>
             <conv:StatusToBrushConverter x:Key="StatusToBrush"/>
+            <conv:StatusToBgBrushConverter x:Key="StatusToBgBrush"/>
+            <conv:VerdictToBrushConverter x:Key="VerdictToBrush"/>
+            <conv:VerdictToBgBrushConverter x:Key="VerdictToBgBrush"/>
             <conv:EqualsToBoolConverter x:Key="EqBool"/>
             <conv:EqualsToVisibilityConverter x:Key="EqVis"/>
             <conv:PositiveIntToVisibilityConverter x:Key="CountVis"/>
+            <conv:ZeroIntToVisibilityConverter x:Key="ZeroVis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

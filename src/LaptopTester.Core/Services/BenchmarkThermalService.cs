@@ -34,8 +34,9 @@ public sealed class BenchmarkThermalService
 
         double? cpuC = null;
         var temps = acpiTask.Result
-            .Select(r => (WmiQueryHelper.Int(r, "CurrentTemperature") - 2732) / 10.0)
-            .Where(t => t > 5 && t < 130)
+            .Select(r => AcpiToCelsius(WmiQueryHelper.Int(r, "CurrentTemperature")))
+            .Where(t => t.HasValue)
+            .Select(t => t!.Value)
             .ToList();
         if (temps.Count > 0)
             cpuC = Math.Round(temps.Max(), 1);
@@ -47,42 +48,38 @@ public sealed class BenchmarkThermalService
         double ramUsed = GlobalMemoryStatusEx(ref mem) ? mem.dwMemoryLoad : 0;
 
         string source = cpuC.HasValue
-            ? "ACPI Thermal Zone + Storage SMART"
+            ? "Motherboard Thermal Sensor (ACPI) + Drive SMART"
             : HardwareService.IsCurrentProcessAdministrator()
-                ? "ACPI sensor unavailable on this board"
-                : "CPU thermal sensor requires Administrator on this board";
+                ? "Motherboard temperature sensor is not available on this laptop"
+                : "Run as Administrator to read CPU motherboard temperature";
 
         return new TemperatureSnapshot(cpuC, maxDriveC, cpuLoad, ramUsed, source, DateTimeOffset.Now);
     }
 
     public async Task<BenchmarkReport> RunBenchmarkAsync(bool includeDisk, IProgress<string>? status = null, CancellationToken ct = default)
     {
-        status?.Report("Running single-core CPU test...");
+        status?.Report("Testing single-core CPU speed...");
         double singleScore = await Task.Run(() => RunCpuPass(threads: 1, limit: 220_000, ct), ct);
 
-        status?.Report("Running multi-core CPU test...");
+        status?.Report("Testing multi-core CPU speed...");
         var swMulti = Stopwatch.StartNew();
         double multiScore = await Task.Run(() => RunCpuPass(threads: Environment.ProcessorCount, limit: 350_000, ct), ct);
         swMulti.Stop();
 
-        status?.Report("Running RAM memory bandwidth test...");
+        status?.Report("Testing RAM memory speed...");
         double memGbSec = await Task.Run(() => RunMemoryBandwidthPass(ct), ct);
 
         double? diskRead = null;
         double? diskWrite = null;
         if (includeDisk)
         {
-            status?.Report("Running sequential storage benchmark...");
+            status?.Report("Testing storage drive read/write speed...");
             var (r, w) = await _storageService.RunSpeedTestAsync(sizeMb: 96, ct: ct);
             diskRead = r;
             diskWrite = w;
         }
 
-        string tier = multiScore >= 12000
-            ? "High Performance / Workstation"
-            : multiScore >= 6000
-                ? "Mainstream / Balanced"
-                : "Entry / Ultralight";
+        string tier = ClassifyTier(multiScore);
 
         return new BenchmarkReport(
             Math.Round(singleScore, 0),
@@ -95,7 +92,20 @@ public sealed class BenchmarkThermalService
             DateTimeOffset.Now);
     }
 
-    private static double RunCpuPass(int threads, int limit, CancellationToken ct)
+    internal static string ClassifyTier(double multiScore) =>
+        multiScore >= 12000
+            ? "High Performance / Workstation"
+            : multiScore >= 6000
+                ? "Mainstream / Balanced"
+                : "Entry / Ultralight";
+
+    internal static double? AcpiToCelsius(int tenthsKelvin)
+    {
+        double c = (tenthsKelvin - 2732) / 10.0;
+        return c is > 5 and < 130 ? c : null;
+    }
+
+    internal static double RunCpuPass(int threads, int limit, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
         long totalOps = 0;
@@ -118,7 +128,7 @@ public sealed class BenchmarkThermalService
         return totalOps / Math.Max(0.05, sw.Elapsed.TotalSeconds) / 100.0;
     }
 
-    private static double RunMemoryBandwidthPass(CancellationToken ct)
+    internal static double RunMemoryBandwidthPass(CancellationToken ct)
     {
         const int sizeBytes = 64 * 1024 * 1024; // 64 MB
         byte[] src = new byte[sizeBytes];

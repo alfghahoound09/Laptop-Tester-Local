@@ -9,14 +9,14 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Báo Cáo Tổng Hợp" Style="{StaticResource PageTitleStyle}"/>
+                    <TextBlock Text="{Binding TitleText}" Style="{StaticResource PageTitleStyle}"/>
                     <TextBlock Text="{Binding ExportStatus}" Style="{StaticResource PageSubtitleStyle}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Làm mới" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                    <Button Content="Lưu Lịch Sử" Command="{Binding SaveSessionCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                    <Button Content="Xuất JSON" Command="{Binding ExportJsonCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                    <Button Content="Xuất HTML / In PDF" Command="{Binding ExportHtmlCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                    <Button Content="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding SaveBtnText}" Command="{Binding SaveSessionCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding ExportJsonBtnText}" Command="{Binding ExportJsonCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding ExportHtmlBtnText}" Command="{Binding ExportHtmlCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
                 </StackPanel>
             </Grid>
 
@@ -26,37 +26,46 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Background="{StaticResource AccentGreenMutedBrush}" BorderBrush="{StaticResource AccentGreenBrush}" BorderThickness="1" CornerRadius="10" Padding="20,10" Margin="0,0,18,0">
+                    <Border Background="{Binding VerdictBand, Converter={StaticResource VerdictToBgBrush}}"
+                            BorderBrush="{Binding VerdictBand, Converter={StaticResource VerdictToBrush}}"
+                            BorderThickness="1" CornerRadius="8" Padding="20,10" Margin="0,0,18,0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Score}" FontSize="30" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}"/>
-                            <TextBlock Text=" / 100" FontSize="15" VerticalAlignment="Bottom" Margin="2,0,0,4" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding Score}" FontSize="30" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{Binding VerdictBand, Converter={StaticResource VerdictToBrush}}"/>
+                            <TextBlock Text=" / 100" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding VerdictText}" FontSize="17" FontWeight="Bold"/>
-                        <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkTextBoxStyle}" Margin="0,8,0,0" ToolTip="Ghi chú báo cáo / Report notes"/>
+                        <TextBlock Text="{Binding VerdictText}" FontSize="17" FontWeight="SemiBold"/>
+                        <TextBlock Text="Notes / Technician Remarks" FontSize="11.5" Foreground="{StaticResource TextMutedBrush}" Margin="0,8,0,4"/>
+                        <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkTextBoxStyle}" ToolTip="Report notes"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="KẾT QUẢ CÁC HẠNG MỤC" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="RECORDED DIAGNOSTIC RESULTS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <Border Style="{StaticResource SubCardBorderStyle}" Visibility="{Binding Results.Count, Converter={StaticResource ZeroVis}}">
+                        <TextBlock Text="No diagnostic checks recorded in this session yet." Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </Border>
                     <ItemsControl ItemsSource="{Binding Results}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="18"/>
+                                            <ColumnDefinition Width="105"/>
                                             <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="100"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Ellipse Width="10" Height="10" Fill="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding Summary}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                        <Border Background="{Binding Status, Converter={StaticResource StatusToBgBrush}}" BorderBrush="{Binding Status, Converter={StaticResource StatusToBrush}}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="7" Height="7" Fill="{Binding Status, Converter={StaticResource StatusToBrush}}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Status}" FontSize="11.5" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Summary}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -67,13 +76,13 @@
 
             <Border Style="{StaticResource CardBorderStyle}" Visibility="{Binding Deductions.Count, Converter={StaticResource CountVis}}">
                 <StackPanel>
-                    <TextBlock Text="ĐIỂM TRỪ" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="SCORE DEDUCTIONS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                     <ItemsControl ItemsSource="{Binding Deductions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
-                                    <TextBlock>
-                                        <Run Text="{Binding PointsDeducted, StringFormat='-{0}đ · ', Mode=OneWay}" Foreground="{StaticResource StatusFailBrush}" FontWeight="Bold"/>
+                                <Border Background="{StaticResource StatusFailBgBrush}" BorderBrush="{StaticResource StatusFailBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run Text="{Binding PointsDeducted, StringFormat='-{0} pts · ', Mode=OneWay}" Foreground="{StaticResource StatusFailBrush}" FontWeight="Bold" FontFamily="{StaticResource MonoFontFamily}"/>
                                         <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold"/>
                                         <Run Text=": "/><Run Text="{Binding Reason, Mode=OneWay}" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </TextBlock>

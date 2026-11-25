@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LaptopTester.Core.Localization;
 using LaptopTester.Core.Models;
 using LaptopTester.Core.Services;
 
@@ -14,11 +16,13 @@ public partial class KeyTileState : ObservableObject
         Code = code;
         Label = label;
         Width = width;
+        KeyValue = Enum.TryParse<Key>(code, true, out var parsed) ? parsed : null;
     }
 
     public string Code { get; }
     public string Label { get; }
     public double Width { get; }
+    public Key? KeyValue { get; }
     [ObservableProperty] private bool _isPressed;
     [ObservableProperty] private bool _isTested;
 }
@@ -33,12 +37,12 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _activeSection = "Hub";
 
     // Keyboard
-    [ObservableProperty] private string _lastKeyText = "Nhấn bất kỳ phím nào để kiểm tra...";
+    [ObservableProperty] private string _lastKeyText = "Press any key on your keyboard to test it...";
     [ObservableProperty] private int _testedKeyCount;
     public ObservableCollection<ObservableCollection<KeyTileState>> KeyboardRows { get; } = new();
 
     // Display
-    [ObservableProperty] private string _displaySummary = "Kiểm tra điểm chết (Red / Green / Blue / White / Black / Grid)";
+    [ObservableProperty] private string _displaySummary = "Full-screen color and grid checks to spot dead pixels, color tints, or light bleed";
     public ObservableCollection<DisplayDetails> Displays { get; } = new();
     public event Action<string>? LaunchDisplayFullScreenRequested;
 
@@ -51,31 +55,34 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
     // Speaker & Mic
     [ObservableProperty] private string _audioSummary = "";
     [ObservableProperty] private bool _isRecordingMic;
+    [ObservableProperty] private string _micButtonText = "Start Recording";
     [ObservableProperty] private double _micLevelPercent;
     [ObservableProperty] private bool _hasRecordedAudio;
     public ObservableCollection<string> DetectedCameras { get; } = new();
 
     // USB & Connectivity
-    [ObservableProperty] private string _usbWatcherLog = "Cắm hoặc rút thiết bị USB vào từng cổng để kiểm tra";
-    [ObservableProperty] private string _bluetoothSummary = "Chưa quét";
+    [ObservableProperty] private string _usbWatcherLog = "Plug or unplug a USB device into each port to confirm Windows detects it";
+    [ObservableProperty] private string _bluetoothSummary = "Not scanned yet";
     public ObservableCollection<UsbControllerDetails> UsbControllers { get; } = new();
     public ObservableCollection<UsbDeviceDetails> UsbDevices { get; } = new();
     public ObservableCollection<WifiNetworkSummary> WifiNetworks { get; } = new();
 
     // Charger & Physical
-    [ObservableProperty] private string _chargerSummary = "Chưa kiểm tra sạc";
+    [ObservableProperty] private string _chargerSummary = "Not checked yet";
     public ObservableCollection<ChecklistToggleItem> PhysicalChecklist { get; } = new();
 
     public DeviceHubViewModel(
         UsbConnectivityService usbService,
         AudioCameraService audioService,
         BatteryService batteryService,
-        TestResultsStore store)
+        TestResultsStore store,
+        LocalizationService loc)
     {
         _usbService = usbService;
         _audioService = audioService;
         _batteryService = batteryService;
         _store = store;
+        _ = loc;
 
         _usbService.UsbTopologyChanged += (_, msg) =>
             Application.Current?.Dispatcher.Invoke(() =>
@@ -87,9 +94,15 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         _audioService.MicrophoneLevelMeasured += (_, lvl) =>
             Application.Current?.Dispatcher.Invoke(() => MicLevelPercent = Math.Round(lvl * 100.0, 1));
 
+        RefreshLabels();
         InitKeyboardRows();
         InitPhysicalChecklist();
         RefreshAudioDevices();
+    }
+
+    private void RefreshLabels()
+    {
+        MicButtonText = IsRecordingMic ? "Stop Recording" : "Start Recording";
     }
 
     [RelayCommand]
@@ -122,11 +135,14 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
 
     public void RecordKeyEvent(string keyCode, bool isDown)
     {
+        bool hasParsedKey = Enum.TryParse<Key>(keyCode, true, out var incomingKey);
         foreach (var row in KeyboardRows)
         {
             foreach (var tile in row)
             {
-                if (tile.Code.Equals(keyCode, StringComparison.OrdinalIgnoreCase))
+                bool matches = (hasParsedKey && tile.KeyValue == incomingKey)
+                    || tile.Code.Equals(keyCode, StringComparison.OrdinalIgnoreCase);
+                if (matches)
                 {
                     tile.IsPressed = isDown;
                     if (isDown)
@@ -149,13 +165,12 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
             tile.IsTested = false;
         }
         TestedKeyCount = 0;
-        LastKeyText = "Đã đặt lại — nhấn phím để kiểm tra";
+        LastKeyText = "Keyboard reset — press any key to test";
     }
 
     [RelayCommand]
     private void MarkDeviceResult(string spec)
     {
-        // Format: "id|Title|Category|PassOrFail"
         var parts = spec.Split('|');
         if (parts.Length < 4) return;
         var st = parts[3].Equals("Pass", StringComparison.OrdinalIgnoreCase) ? TestStatus.Passed : TestStatus.Failed;
@@ -177,7 +192,7 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
     public void RefreshAudioDevices()
     {
         var dev = _audioService.GetAudioDevices();
-        AudioSummary = $"Output ({dev.OutputDeviceCount}): {dev.PrimaryOutputName}  ·  Input ({dev.InputDeviceCount}): {dev.PrimaryInputName}";
+        AudioSummary = $"Speakers ({dev.OutputDeviceCount}): {dev.PrimaryOutputName}  ·  Mic ({dev.InputDeviceCount}): {dev.PrimaryInputName}";
     }
 
     [RelayCommand] private void PlayLeftSpeaker() => _audioService.PlayStereoTest(true, false, 440);
@@ -200,6 +215,7 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
         {
             IsRecordingMic = _audioService.StartMicrophoneRecording();
         }
+        RefreshLabels();
     }
 
     [RelayCommand]
@@ -244,10 +260,10 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
     {
         var b = await _batteryService.GetBatteryInfoAsync();
         ChargerSummary = !b.HasBattery
-            ? "Desktop / AC Power"
+            ? "Desktop / Wall Power Only (No Battery)"
             : b.IsOnAcPower
-                ? $"AC Plugged In · {b.ChargePercent}% · Rate: {b.RateWatts:0.0}W · Voltage: {b.VoltageVolts:0.00}V"
-                : $"On Battery · {b.ChargePercent}% · Discharge: {b.RateWatts:0.0}W (Plug in charger to verify)";
+                ? $"Charger connected · {b.ChargePercent}% · Charge rate: {b.RateWatts:0.0}W · Voltage: {b.VoltageVolts:0.00}V"
+                : $"Running on battery · {b.ChargePercent}% · Draining: {b.RateWatts:0.0}W (Plug in charger to verify charging)";
     }
 
     private void InitKeyboardRows()
@@ -272,11 +288,11 @@ public partial class DeviceHubViewModel : ObservableObject, IDisposable
 
     private void InitPhysicalChecklist()
     {
-        PhysicalChecklist.Add(new ChecklistToggleItem("Bản lề gập mở mượt, không lỏng / gãy chân ốc"));
-        PhysicalChecklist.Add(new ChecklistToggleItem("Vỏ máy, góc cạnh, cổng kết nối không móp méo"));
-        PhysicalChecklist.Add(new ChecklistToggleItem("Ốc đáy còn nguyên tem / không trờn ren"));
-        PhysicalChecklist.Add(new ChecklistToggleItem("Màn hình không hở sáng nặng, không vết cấn phím"));
-        PhysicalChecklist.Add(new ChecklistToggleItem("Quạt tản nhiệt chạy êm, không kêu rè"));
+        PhysicalChecklist.Add(new ChecklistToggleItem("Hinges open and close smoothly with no looseness or cracking"));
+        PhysicalChecklist.Add(new ChecklistToggleItem("Chassis, corners, and ports have no dents, cracks, or bent pins"));
+        PhysicalChecklist.Add(new ChecklistToggleItem("Bottom cover screws are intact with no stripped heads or missing seals"));
+        PhysicalChecklist.Add(new ChecklistToggleItem("Screen has no severe light bleed, pressure spots, or keyboard marks"));
+        PhysicalChecklist.Add(new ChecklistToggleItem("Cooling fans spin smoothly without rattling, grinding, or buzzing"));
     }
 
     public void Dispose()

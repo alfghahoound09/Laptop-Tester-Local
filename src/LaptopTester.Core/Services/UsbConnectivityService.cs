@@ -102,18 +102,7 @@ public sealed class UsbConnectivityService : IDisposable
             {
                 string name = WmiQueryHelper.Str(r, "Name", "USB Device");
                 string id = WmiQueryHelper.Str(r, "DeviceID");
-                bool isHub = name.Contains("Hub", StringComparison.OrdinalIgnoreCase)
-                    || name.Contains("Root", StringComparison.OrdinalIgnoreCase);
-                string speed = name.Contains("USB4", StringComparison.OrdinalIgnoreCase) || name.Contains("Thunderbolt", StringComparison.OrdinalIgnoreCase)
-                    ? "USB4 / 40 Gbps"
-                    : name.Contains("3.2", StringComparison.OrdinalIgnoreCase) || name.Contains("3.1", StringComparison.OrdinalIgnoreCase)
-                        ? "USB 3.1 / 10 Gbps"
-                        : name.Contains("3.0", StringComparison.OrdinalIgnoreCase) || name.Contains("xHCI", StringComparison.OrdinalIgnoreCase) || name.Contains("SuperSpeed", StringComparison.OrdinalIgnoreCase)
-                            ? "USB 3.0 / 5 Gbps"
-                            : "USB 2.0 / Standard";
-                string portType = name.Contains("Type-C", StringComparison.OrdinalIgnoreCase) || name.Contains("UCSI", StringComparison.OrdinalIgnoreCase)
-                    ? "USB-C"
-                    : "USB";
+                var (portType, speed, isHub) = ClassifyUsbDevice(name);
                 return new UsbDeviceDetails(name, id, portType, speed, WmiQueryHelper.Str(r, "Manufacturer", "Standard"), isHub);
             })
             .OrderBy(d => d.IsHub)
@@ -172,13 +161,7 @@ public sealed class UsbConnectivityService : IDisposable
                         {
                             ct.ThrowIfCancellationRequested();
                             var info = Marshal.PtrToStructure<WLAN_INTERFACE_INFO>(listPtr + offset + i * structSize);
-                            string status = info.isState switch
-                            {
-                                1 => "Connected",
-                                4 => "Disconnected",
-                                6 => "Associating",
-                                _ => $"State {info.isState}"
-                            };
+                            string status = MapWlanInterfaceState(info.isState);
                             adapters.Add(new WifiAdapterDetails("Wi-Fi Adapter", info.strInterfaceDescription, status, "", 0, ""));
 
                             Guid guid = info.InterfaceGuid;
@@ -201,7 +184,7 @@ public sealed class UsbConnectivityService : IDisposable
                                                 ssid,
                                                 (int)net.wlanSignalQuality,
                                                 net.bSecurityEnabled != 0 ? "Secured" : "Open",
-                                                net.dot11PhyTypes?.FirstOrDefault() switch { 8 => "Wi-Fi 6 (802.11ax)", 7 => "Wi-Fi 5 (802.11ac)", 6 => "802.11n", _ => "802.11" }));
+                                                MapPhyType(net.dot11PhyTypes?.FirstOrDefault() ?? 0)));
                                         }
                                     }
                                 }
@@ -219,11 +202,7 @@ public sealed class UsbConnectivityService : IDisposable
                 if (client != IntPtr.Zero) WlanCloseHandle(client, IntPtr.Zero);
             }
 
-            return ((IReadOnlyList<WifiAdapterDetails>)adapters, (IReadOnlyList<WifiNetworkSummary>)networks
-                .GroupBy(n => n.Ssid)
-                .Select(g => g.OrderByDescending(x => x.SignalPercent).First())
-                .OrderByDescending(x => x.SignalPercent)
-                .ToList());
+            return ((IReadOnlyList<WifiAdapterDetails>)adapters, DedupeNetworks(networks));
         }, ct);
     }
 
@@ -242,7 +221,7 @@ public sealed class UsbConnectivityService : IDisposable
                 var info = new BLUETOOTH_RADIO_INFO { dwSize = (uint)Marshal.SizeOf<BLUETOOTH_RADIO_INFO>() };
                 uint rc = BluetoothGetRadioInfo(radio, ref info);
                 string addr = rc == 0
-                    ? string.Join(":", BitConverter.GetBytes(info.address).Take(6).Reverse().Select(b => b.ToString("X2")))
+                    ? FormatBluetoothAddress(info.address)
                     : "N/A";
                 return (Found: true, Name: info.szName ?? "Bluetooth Radio", Address: addr);
             }
@@ -263,6 +242,59 @@ public sealed class UsbConnectivityService : IDisposable
             radioResult.Address,
             devices);
     }
+
+    internal static (string PortType, string SpeedLabel, bool IsHub) ClassifyUsbDevice(string name)
+    {
+        bool isHub = name.Contains("Hub", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Root", StringComparison.OrdinalIgnoreCase);
+        string speed = name.Contains("USB4", StringComparison.OrdinalIgnoreCase) || name.Contains("Thunderbolt", StringComparison.OrdinalIgnoreCase)
+            ? "USB4 / 40 Gbps"
+            : name.Contains("3.2", StringComparison.OrdinalIgnoreCase) || name.Contains("3.1", StringComparison.OrdinalIgnoreCase)
+                ? "USB 3.1 / 10 Gbps"
+                : name.Contains("3.0", StringComparison.OrdinalIgnoreCase) || name.Contains("xHCI", StringComparison.OrdinalIgnoreCase) || name.Contains("SuperSpeed", StringComparison.OrdinalIgnoreCase)
+                    ? "USB 3.0 / 5 Gbps"
+                    : "USB 2.0 / Standard";
+        string portType = name.Contains("Type-C", StringComparison.OrdinalIgnoreCase) || name.Contains("UCSI", StringComparison.OrdinalIgnoreCase)
+            ? "USB-C"
+            : "USB";
+        return (portType, speed, isHub);
+    }
+
+    internal static string MapPhyType(int phyType) => phyType switch
+    {
+        4 => "802.11a",
+        5 => "802.11b",
+        6 => "802.11g",
+        7 => "Wi-Fi 4 (802.11n)",
+        8 => "Wi-Fi 5 (802.11ac)",
+        9 => "802.11ad (WiGig)",
+        10 => "Wi-Fi 6/6E (802.11ax)",
+        11 => "Wi-Fi 7 (802.11be)",
+        _ => "802.11"
+    };
+
+    internal static string MapWlanInterfaceState(int state) => state switch
+    {
+        0 => "Not Ready",
+        1 => "Connected",
+        2 => "Ad-hoc",
+        3 => "Disconnecting",
+        4 => "Disconnected",
+        5 => "Associating",
+        6 => "Discovering",
+        7 => "Authenticating",
+        _ => $"State {state}"
+    };
+
+    internal static string FormatBluetoothAddress(ulong address) =>
+        string.Join(":", BitConverter.GetBytes(address).Take(6).Reverse().Select(b => b.ToString("X2")));
+
+    internal static IReadOnlyList<WifiNetworkSummary> DedupeNetworks(IEnumerable<WifiNetworkSummary> networks) =>
+        networks
+            .GroupBy(n => n.Ssid)
+            .Select(g => g.OrderByDescending(x => x.SignalPercent).First())
+            .OrderByDescending(x => x.SignalPercent)
+            .ToList();
 
     public void Dispose() => StopUsbWatcher();
 }

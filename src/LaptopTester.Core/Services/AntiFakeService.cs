@@ -44,14 +44,14 @@ public sealed class AntiFakeService
             DisplayOrDash(regCpu),
             DisplayOrDash(smbiosCpu),
             cpuMatch,
-            cpuMatch ? "Khớp giữa các nguồn / Consistent" : "Sai lệch tên CPU giữa WMI / Registry / SMBIOS"));
+            cpuMatch ? "Verified — Matches across Windows, Registry & BIOS" : "Mismatch — CPU model name differs across system sources"));
 
         if (!cpuMatch)
         {
             indicators.Add(new SpoofingIndicator(
                 "CPU",
                 "CPU name mismatch across sources",
-                $"WMI='{wmiCpu}' vs Registry='{regCpu}' vs SMBIOS='{smbiosCpu}'",
+                $"Windows reported '{wmiCpu}', Registry has '{regCpu}', BIOS/SMBIOS has '{smbiosCpu}'.",
                 SpoofingRisk.High));
         }
 
@@ -61,23 +61,22 @@ public sealed class AntiFakeService
         double apiRamGb = GetPhysicallyInstalledSystemMemory(out long kb) && kb > 0 ? Math.Round(kb / (1024.0 * 1024.0), 1) : csRamGb;
         double smbiosRamGb = Math.Round(smbios.MemorySlots.Sum(s => s.CapacityGb), 1);
 
-        var observedRamValues = new[] { wmiRamGb, apiRamGb, smbiosRamGb }.Where(v => v > 0).ToList();
-        bool ramMatch = observedRamValues.Count < 2 || (observedRamValues.Max() - observedRamValues.Min()) <= 1.0;
+        bool ramMatch = RamValuesConsistent([wmiRamGb, apiRamGb, smbiosRamGb]);
 
         comparisons.Add(new SourceComparisonRow(
             "RAM",
             wmiRamGb > 0 ? $"{wmiRamGb:0.#} GB" : (csRamGb > 0 ? $"{csRamGb:0.#} GB" : "N/A"),
-            apiRamGb > 0 ? $"OS API: {apiRamGb:0.#} GB" : "N/A",
+            apiRamGb > 0 ? $"Windows API: {apiRamGb:0.#} GB" : "N/A",
             smbiosRamGb > 0 ? $"{smbiosRamGb:0.#} GB" : "N/A",
             ramMatch,
-            ramMatch ? "Dung lượng hợp lệ / Consistent" : "Phát hiện chênh lệch dung lượng RAM"));
+            ramMatch ? "Verified — RAM capacity matches hardware" : "Mismatch — Installed RAM capacity differs across sources"));
 
         if (!ramMatch)
         {
             indicators.Add(new SpoofingIndicator(
                 "RAM",
-                "RAM capacity discrepancy",
-                $"WMI={wmiRamGb} GB, OS Physical API={apiRamGb} GB, SMBIOS={smbiosRamGb} GB",
+                "RAM capacity mismatch",
+                $"WMI reports {wmiRamGb} GB, Windows API reports {apiRamGb} GB, BIOS reports {smbiosRamGb} GB.",
                 SpoofingRisk.High));
         }
 
@@ -92,46 +91,44 @@ public sealed class AntiFakeService
             modelMatch = ModelsMatch(wmiModel, smbiosModel);
 
         comparisons.Add(new SourceComparisonRow(
-            "Model / BIOS",
+            "Laptop Model",
             DisplayOrDash(wmiModel),
             DisplayOrDash(regModel),
             DisplayOrDash(smbiosModel),
             modelMatch,
-            modelMatch ? "Model khớp / Consistent" : "Tên máy không khớp giữa các nguồn"));
+            modelMatch ? "Verified — Model name matches BIOS firmware" : "Mismatch — Model name differs between Windows and BIOS"));
 
         if (!modelMatch)
         {
             indicators.Add(new SpoofingIndicator(
-                "System Model",
-                "Model identity mismatch",
-                $"WMI='{wmiModel}' vs Registry='{regModel}' vs SMBIOS='{smbiosModel}'",
+                "Laptop Model",
+                "Laptop model mismatch",
+                $"Windows reported '{wmiModel}', Registry has '{regModel}', BIOS/SMBIOS has '{smbiosModel}'.",
                 SpoofingRisk.Medium));
         }
 
         // 4. Storage SSD vs HDD media truth check (catches HDD renamed with "SSD" in FriendlyName)
         var internalDrives = drivesTask.Result.Where(d => !d.IsExternal).ToList();
-        var suspiciousDrive = internalDrives.FirstOrDefault(d =>
-            d.Model.Contains("SSD", StringComparison.OrdinalIgnoreCase) &&
-            d.MediaCategory.Equals("HDD", StringComparison.OrdinalIgnoreCase));
+        var suspiciousDrive = FindMislabeledSsd(drivesTask.Result);
 
         string driveSummary = internalDrives.Count == 0
             ? "N/A"
             : string.Join("; ", internalDrives.Select(d => $"{d.Model} ({d.MediaCategory})"));
 
         comparisons.Add(new SourceComparisonRow(
-            "Storage",
+            "Storage Drive",
             driveSummary,
-            "Win32_DiskDrive",
+            "Windows Disk Driver",
             internalDrives.Count == 0 ? "N/A" : string.Join("; ", internalDrives.Select(d => $"{d.InterfaceType} / {d.MediaCategory}")),
             suspiciousDrive is null,
-            suspiciousDrive is null ? "Loại ổ cứng khớp thực tế" : $"Cảnh báo: '{suspiciousDrive.Model}' có tên SSD nhưng bus/media là HDD"));
+            suspiciousDrive is null ? "Verified — Physical drive type matches label" : $"Warning: '{suspiciousDrive.Model}' says SSD in its name, but the hardware is HDD"));
 
         if (suspiciousDrive is not null)
         {
             indicators.Add(new SpoofingIndicator(
                 "Storage",
-                "Drive label vs media mismatch",
-                $"Drive '{suspiciousDrive.Model}' reports SSD in name but physical media is {suspiciousDrive.MediaCategory}.",
+                "Mislabeled drive (HDD labeled as SSD)",
+                $"Drive '{suspiciousDrive.Model}' includes 'SSD' in its name, but its physical hardware type is {suspiciousDrive.MediaCategory}.",
                 SpoofingRisk.High));
         }
 
@@ -140,13 +137,37 @@ public sealed class AntiFakeService
         if (detectedTools.Count > 0)
         {
             indicators.Add(new SpoofingIndicator(
-                "Software",
-                "Suspicious system/spoofer tools running",
+                "Running Software",
+                "Known hardware-spoofing utility running",
                 string.Join(", ", detectedTools),
                 SpoofingRisk.Medium));
         }
 
-        SpoofingRisk risk = indicators.Any(i => i.Severity == SpoofingRisk.High)
+        SpoofingRisk risk = AggregateRisk(indicators);
+
+        return new AntiFakeReport(risk, indicators.Count == 0, detectedTools.Count > 0, detectedTools, comparisons, indicators, DateTimeOffset.Now);
+    }
+
+    internal static readonly string[] SpoofToolMarkers =
+        { "hwidspoofer", "dmi_edit", "dmiedit", "amidewin", "afudos", "cheatengine" };
+
+    internal static bool IsSuspectProcess(string processName) =>
+        SpoofToolMarkers.Any(m => processName.Contains(m, StringComparison.OrdinalIgnoreCase));
+
+    internal static bool RamValuesConsistent(IEnumerable<double> values, double toleranceGb = 1.0)
+    {
+        var observed = values.Where(v => v > 0).ToList();
+        return observed.Count < 2 || (observed.Max() - observed.Min()) <= toleranceGb;
+    }
+
+    internal static StorageDriveDetails? FindMislabeledSsd(IEnumerable<StorageDriveDetails> drives) =>
+        drives.FirstOrDefault(d =>
+            !d.IsExternal &&
+            d.Model.Contains("SSD", StringComparison.OrdinalIgnoreCase) &&
+            d.MediaCategory.Equals("HDD", StringComparison.OrdinalIgnoreCase));
+
+    internal static SpoofingRisk AggregateRisk(IReadOnlyCollection<SpoofingIndicator> indicators) =>
+        indicators.Any(i => i.Severity == SpoofingRisk.High)
             ? SpoofingRisk.High
             : indicators.Any(i => i.Severity == SpoofingRisk.Medium)
                 ? SpoofingRisk.Medium
@@ -154,12 +175,8 @@ public sealed class AntiFakeService
                     ? SpoofingRisk.Low
                     : SpoofingRisk.None;
 
-        return new AntiFakeReport(risk, indicators.Count == 0, detectedTools.Count > 0, detectedTools, comparisons, indicators, DateTimeOffset.Now);
-    }
-
     private static List<string> DetectSuspectedTools()
     {
-        string[] knownMarkers = { "hwidspoofer", "dmi_edit", "dmiedit", "amidewin", "afudos", "cheatengine" };
         var found = new List<string>();
         try
         {
@@ -167,7 +184,7 @@ public sealed class AntiFakeService
             {
                 try
                 {
-                    if (knownMarkers.Any(m => p.ProcessName.Contains(m, StringComparison.OrdinalIgnoreCase)))
+                    if (IsSuspectProcess(p.ProcessName))
                         found.Add(p.ProcessName);
                 }
                 catch { }
@@ -184,13 +201,13 @@ public sealed class AntiFakeService
         return Normalize(a) == Normalize(b) || Normalize(a).Contains(Normalize(b)) || Normalize(b).Contains(Normalize(a));
     }
 
-    private static bool ModelsMatch(string a, string b)
+    internal static bool ModelsMatch(string a, string b)
     {
         if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return true;
         return Normalize(a).Contains(Normalize(b)) || Normalize(b).Contains(Normalize(a));
     }
 
-    private static string Normalize(string s) =>
+    internal static string Normalize(string s) =>
         Regex.Replace(s.ToLowerInvariant(), @"(\(r\)|\(tm\)|cpu|processor|\s+|@.*$)", "");
 
     private static string DisplayOrDash(string s) => string.IsNullOrWhiteSpace(s) ? "—" : s;

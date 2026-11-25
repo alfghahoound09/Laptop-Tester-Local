@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaptopTester.Core.Localization;
+using LaptopTester.Core.Services;
 
 namespace LaptopTester.App.ViewModels;
 
@@ -18,6 +19,7 @@ public enum AppTab
 public partial class MainViewModel : ObservableObject
 {
     private readonly LocalizationService _loc;
+    private readonly TestResultsStore _store;
 
     [ObservableProperty] private AppTab _activeTab = AppTab.Dashboard;
     [ObservableProperty] private object? _currentViewModel;
@@ -27,8 +29,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _navDevices = "";
     [ObservableProperty] private string _navReport = "";
     [ObservableProperty] private string _navHistory = "";
-    [ObservableProperty] private string _languageLabel = "VI";
+    [ObservableProperty] private string _navSettings = "";
+    [ObservableProperty] private string _appVersionLabel = "v1.0.0";
+    [ObservableProperty] private string _privilegeShortLabel = "";
+    [ObservableProperty] private string _sessionChecksBadge = "0";
     [ObservableProperty] private bool _canGoBack;
+    [ObservableProperty] private bool _isNavExpanded = true;
+    [ObservableProperty] private double _navPaneWidth = 224;
 
     public DashboardViewModel Dashboard { get; }
     public QuickTestViewModel QuickTest { get; }
@@ -40,6 +47,7 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(
         LocalizationService loc,
+        TestResultsStore store,
         DashboardViewModel dashboard,
         QuickTestViewModel quickTest,
         HardwareHubViewModel hardware,
@@ -49,6 +57,7 @@ public partial class MainViewModel : ObservableObject
         SettingsViewModel settings)
     {
         _loc = loc;
+        _store = store;
         Dashboard = dashboard;
         QuickTest = quickTest;
         Hardware = hardware;
@@ -64,8 +73,12 @@ public partial class MainViewModel : ObservableObject
             Navigate(AppTab.Devices);
         };
 
-        _loc.LanguageChanged += (_, _) => RefreshLabels();
+        _store.ResultsChanged += (_, _) => RefreshSessionBadge();
+        var ver = typeof(MainViewModel).Assembly.GetName().Version;
+        AppVersionLabel = ver is not null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "v1.0.0";
+        PrivilegeShortLabel = HardwareService.IsCurrentProcessAdministrator() ? "ADMIN" : "STANDARD";
         RefreshLabels();
+        RefreshSessionBadge();
         Navigate(AppTab.Dashboard);
     }
 
@@ -112,9 +125,16 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ToggleLanguage()
+    private void ToggleNavPane()
     {
-        _loc.SetLanguage(_loc.CurrentLanguage == AppLanguage.Vietnamese ? AppLanguage.English : AppLanguage.Vietnamese);
+        IsNavExpanded = !IsNavExpanded;
+        NavPaneWidth = IsNavExpanded ? 224 : 64;
+    }
+
+    private void RefreshSessionBadge()
+    {
+        int count = _store.Results.Count;
+        SessionChecksBadge = $"{count} check{(count == 1 ? "" : "s")}";
     }
 
     private void RefreshLabels()
@@ -125,6 +145,7 @@ public partial class MainViewModel : ObservableObject
         NavDevices = _loc.Get("Nav.Devices");
         NavReport = _loc.Get("Nav.Report");
         NavHistory = _loc.Get("Nav.History");
-        LanguageLabel = _loc.CurrentLanguage == AppLanguage.Vietnamese ? "VI" : "EN";
+        NavSettings = _loc.Get("Nav.Settings");
+        RefreshSessionBadge();
     }
 }

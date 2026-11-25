@@ -4,13 +4,22 @@
         xmlns:vm="clr-namespace:LaptopTester.App.ViewModels"
         xmlns:views="clr-namespace:LaptopTester.App.Views"
         Title="LaptopTester Open Edition"
-        Width="1360" Height="820"
-        MinWidth="1024" MinHeight="660"
+        Width="1380" Height="840"
+        MinWidth="1060" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgPrimaryBrush}"
         Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFontFamily}"
         PreviewKeyDown="Window_PreviewKeyDown"
         PreviewKeyUp="Window_PreviewKeyUp">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="42"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
@@ -36,114 +45,253 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid Background="{StaticResource BgPrimaryBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Border x:Name="OuterWindowBorder" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" Background="{StaticResource BgPrimaryBrush}">
+        <Grid Background="{StaticResource BgPrimaryBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Top Navigation Header (Spotify-inspired dark shell matching screenshots) -->
-        <Border Grid.Row="0" Background="#121212" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="20,12">
-            <Grid Background="{StaticResource BgPrimaryBrush}">
+            <!-- Windows 11 Custom Title Bar -->
+            <Grid Grid.Row="0" Background="{StaticResource BgNavRailBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Brand Left -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Left App Identity & Nav Controls -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
                     <Button Command="{Binding GoBackCommand}"
                             Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Padding="9,7" Margin="0,0,10,0"
+                            Background="Transparent" BorderThickness="0"
+                            Width="34" Height="30" Padding="0" Margin="0,0,4,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Back"
                             AutomationProperties.Name="Back">
-                        <TextBlock Text="←" FontSize="14" FontWeight="Bold"/>
+                        <Path Data="{StaticResource IconBack}" Fill="{StaticResource TextPrimaryBrush}" Width="13" Height="13" Stretch="Uniform"/>
                     </Button>
 
-                    <Border Background="{StaticResource AccentGreenMutedBrush}" BorderBrush="{StaticResource AccentGreenBrush}" BorderThickness="1" CornerRadius="8" Width="34" Height="34" Margin="0,0,10,0">
-                        <Path Data="{StaticResource IconLaptop}" Fill="{StaticResource AccentGreenHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button Command="{Binding ToggleNavPaneCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Background="Transparent" BorderThickness="0"
+                            Width="36" Height="30" Padding="0" Margin="0,0,8,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Toggle Navigation Rail"
+                            AutomationProperties.Name="Toggle Navigation">
+                        <Path Data="{StaticResource IconMenu}" Fill="{StaticResource TextSecondaryBrush}" Width="14" Height="14" Stretch="Uniform"/>
+                    </Button>
+
+                    <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Width="26" Height="26" Margin="0,0,10,0">
+                        <Path Data="{StaticResource IconLaptop}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
-                    <TextBlock Text="LaptopTester" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}"/>
-                    <Border Background="{StaticResource BgSurfaceBrush}" CornerRadius="6" Padding="7,3" Margin="10,0,6,0" VerticalAlignment="Center">
-                        <TextBlock Text="v1.0" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="LaptopTester" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                    <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,6,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding AppVersionLabel}" FontSize="10.5" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextSecondaryBrush}"/>
                     </Border>
-                    <Border Background="{StaticResource AccentGreenMutedBrush}" CornerRadius="6" Padding="7,3" VerticalAlignment="Center">
-                        <TextBlock Text="OPEN" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentGreenHoverBrush}"/>
+                    <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                        <TextBlock Text="OPEN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Center/Right Navigation Pill Bar -->
-                <Border Grid.Column="1" HorizontalAlignment="Center" Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="20" Padding="4">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Dashboard, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Dashboard}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconHome}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavDashboard}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=QuickTest, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.QuickTest}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconChecklist}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavQuickTest}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Hardware, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Hardware}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconCpu}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavHardware}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Devices, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Devices}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconKeyboard}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavDevices}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Report, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Report}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconReport}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavReport}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavTabRadioStyle}"
-                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=History, Mode=OneWay}"
-                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.History}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconHistory}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding NavHistory}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
-                </Border>
-
-                <!-- Right Controls: Language & Settings -->
+                <!-- Right Titlebar Tools & Win11 Caption Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding ToggleLanguageCommand}" Style="{StaticResource SecondaryButtonStyle}" Padding="11,7" Margin="0,0,8,0"
-                            AutomationProperties.Name="Switch Language">
-                        <TextBlock Text="{Binding LanguageLabel}" FontWeight="SemiBold"/>
+                    <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,8,0" VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                        <TextBlock Text="{Binding PrivilegeShortLabel}" FontSize="10.5" FontWeight="SemiBold" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                    </Border>
+
+                    <Button Style="{StaticResource WindowCaptionButtonStyle}"
+                            Click="MinimizeButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Minimize"
+                            AutomationProperties.Name="Minimize">
+                        <Path Data="M0,5 H10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.2" Width="10" Height="10" SnapsToDevicePixels="True"/>
                     </Button>
-                    <Button Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Settings}"
-                            Style="{StaticResource SecondaryButtonStyle}" Padding="10,8"
-                            AutomationProperties.Name="Settings">
-                        <Path Data="{StaticResource IconSettings}" Fill="{StaticResource TextPrimaryBrush}" Width="15" Height="15" Stretch="Uniform"/>
+
+                    <Button Style="{StaticResource WindowCaptionButtonStyle}"
+                            Click="MaximizeRestoreButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Maximize / Restore"
+                            AutomationProperties.Name="Maximize">
+                        <Grid Width="10" Height="10">
+                            <Path x:Name="MaximizeGlyph" Data="M0.5,0.5 H9.5 V9.5 H0.5 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.1" SnapsToDevicePixels="True"/>
+                            <Path x:Name="RestoreGlyph" Data="M2.5,2.5 V0.5 H9.5 V7.5 H7.5 M0.5,2.5 H7.5 V9.5 H0.5 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.1" SnapsToDevicePixels="True" Visibility="Collapsed"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Style="{StaticResource WindowCloseButtonStyle}"
+                            Click="CloseButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Close"
+                            AutomationProperties.Name="Close">
+                        <Path Data="M0.5,0.5 L9.5,9.5 M9.5,0.5 L0.5,9.5" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.2" Width="10" Height="10" SnapsToDevicePixels="True"/>
                     </Button>
                 </StackPanel>
             </Grid>
-        </Border>
 
-        <!-- Active Page Body -->
-        <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" Margin="24,18,24,22"/>
-    </Grid>
+            <!-- Windows 11 NavigationView Shell Body -->
+            <Grid Grid.Row="1" Background="{StaticResource BgNavRailBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Navigation Rail -->
+                <Grid Grid.Column="0" Width="{Binding NavPaneWidth}" Background="{StaticResource BgNavRailBrush}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,8,0,0" KeyboardNavigation.TabNavigation="Cycle">
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Dashboard, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Dashboard}"
+                                     ToolTip="{Binding NavDashboard}"
+                                     AutomationProperties.Name="Dashboard">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconHome}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavDashboard}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F1" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=QuickTest, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.QuickTest}"
+                                     ToolTip="{Binding NavQuickTest}"
+                                     AutomationProperties.Name="Quick Test">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconChecklist}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavQuickTest}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F2" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Hardware, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Hardware}"
+                                     ToolTip="{Binding NavHardware}"
+                                     AutomationProperties.Name="Hardware">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconCpu}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavHardware}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F3" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Devices, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Devices}"
+                                     ToolTip="{Binding NavDevices}"
+                                     AutomationProperties.Name="Devices">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconKeyboard}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavDevices}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F4" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Report, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Report}"
+                                     ToolTip="{Binding NavReport}"
+                                     AutomationProperties.Name="Report">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconReport}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavReport}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F5" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=History, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.History}"
+                                     ToolTip="{Binding NavHistory}"
+                                     AutomationProperties.Name="History">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconHistory}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavHistory}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F6" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+                    </StackPanel>
+
+                    <!-- Bottom Pinned Settings & Session Pill -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                        <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="10,0,10,8"
+                                Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="{StaticResource AccentOrangeBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding SessionChecksBadge}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Height="1" Background="{StaticResource BorderSubtleBrush}" Margin="12,0,12,6"/>
+
+                        <RadioButton Style="{StaticResource NavRailRadioStyle}"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqBool}, ConverterParameter=Settings, Mode=OneWay}"
+                                     Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:AppTab.Settings}"
+                                     ToolTip="{Binding NavSettings}"
+                                     AutomationProperties.Name="Settings">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconSettings}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding NavSettings}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="2" Text="F7" FontSize="10.5" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Visibility="{Binding IsNavExpanded, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </RadioButton>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Inner Rounded Windows 11 Workspace Frame -->
+                <Border Grid.Column="1"
+                        Background="{StaticResource BgWorkspaceBrush}"
+                        BorderBrush="{StaticResource BorderSubtleBrush}"
+                        BorderThickness="1,1,0,0"
+                        CornerRadius="10,0,0,0"
+                        Padding="26,22,26,22">
+                    <ContentControl Content="{Binding CurrentViewModel}"/>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

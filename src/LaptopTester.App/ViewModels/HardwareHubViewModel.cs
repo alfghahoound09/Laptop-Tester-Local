@@ -35,6 +35,14 @@ public partial class HardwareHubViewModel : ObservableObject
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _statusBanner = "";
 
+    // Localized Sub-Tabs & Labels
+    [ObservableProperty] private string _tabHardwareLabel = "";
+    [ObservableProperty] private string _tabAntiFakeLabel = "";
+    [ObservableProperty] private string _tabBatteryLabel = "";
+    [ObservableProperty] private string _tabThermalLabel = "";
+    [ObservableProperty] private string _tabStorageAuditLabel = "";
+    [ObservableProperty] private string _stressButtonText = "";
+
     // Hardware details
     [ObservableProperty] private HardwareReport? _hardwareReport;
     public ObservableCollection<RamModuleDetails> RamModules { get; } = new();
@@ -44,7 +52,7 @@ public partial class HardwareHubViewModel : ObservableObject
 
     // Anti-Fake
     [ObservableProperty] private AntiFakeReport? _antiFakeReport;
-    [ObservableProperty] private string _antiFakeBannerText = "Nhấn 'Quét Phát Hiện' để đối chiếu WMI, Registry và SMBIOS.";
+    [ObservableProperty] private string _antiFakeBannerText = "";
     [ObservableProperty] private bool _antiFakeIsClean = true;
     public ObservableCollection<SourceComparisonRow> Comparisons { get; } = new();
     public ObservableCollection<SpoofingIndicator> Indicators { get; } = new();
@@ -52,19 +60,19 @@ public partial class HardwareHubViewModel : ObservableObject
     // Battery
     [ObservableProperty] private BatteryDetails? _battery;
     [ObservableProperty] private bool _isStressRunning;
-    [ObservableProperty] private string _stressStatusText = "Sẵn sàng chạy stress test tải thực tế";
+    [ObservableProperty] private string _stressStatusText = "";
     [ObservableProperty] private int _stressProgressPercent;
     public ObservableCollection<ChecklistToggleItem> BatteryChecklist { get; } = new();
 
     // Storage Speed & System Audit
-    [ObservableProperty] private string _storageBenchResult = "Chưa chạy benchmark tốc độ ổ cứng";
+    [ObservableProperty] private string _storageBenchResult = "";
     public ObservableCollection<DriverIssueDetails> DriverIssues { get; } = new();
     public ObservableCollection<StartupEntryDetails> StartupEntries { get; } = new();
 
     // Thermal & CPU/RAM Benchmark
     [ObservableProperty] private TemperatureSnapshot? _thermal;
     [ObservableProperty] private BenchmarkReport? _benchmark;
-    [ObservableProperty] private string _benchmarkStatus = "Nhấn để chạy benchmark CPU + RAM + Ổ cứng";
+    [ObservableProperty] private string _benchmarkStatus = "";
 
     public HardwareHubViewModel(
         HardwareService hardwareService,
@@ -85,12 +93,32 @@ public partial class HardwareHubViewModel : ObservableObject
         _store = store;
         _loc = loc;
 
-        BatteryChecklist.Add(new ChecklistToggleItem("Đặt chế độ nguồn ở 'Balanced' (Cân bằng)"));
-        BatteryChecklist.Add(new ChecklistToggleItem("Rút sạc AC để đo tốc độ xả thực tế"));
-        BatteryChecklist.Add(new ChecklistToggleItem("Đóng ứng dụng nền nặng trước khi đo"));
-        BatteryChecklist.Add(new ChecklistToggleItem("Kết nối Wi-Fi để theo dõi tải bình thường"));
+        BatteryChecklist.Add(new ChecklistToggleItem("Set Windows power mode to 'Balanced'"));
+        BatteryChecklist.Add(new ChecklistToggleItem("Unplug the charger to measure real battery drain"));
+        BatteryChecklist.Add(new ChecklistToggleItem("Close heavy background apps or games before starting"));
+        BatteryChecklist.Add(new ChecklistToggleItem("Keep Wi-Fi connected for normal everyday load"));
 
+        RefreshLabels();
         _ = RefreshHardwareAsync();
+    }
+
+    private void RefreshLabels()
+    {
+        TabHardwareLabel = "Hardware Specs";
+        TabAntiFakeLabel = "Anti-Fake Check";
+        TabBatteryLabel = "Battery Health";
+        TabThermalLabel = "Thermals & Speed";
+        TabStorageAuditLabel = "Storage & Drivers";
+        StressButtonText = IsStressRunning ? _loc.Get("Battery.StressStop") : _loc.Get("Battery.StressStart");
+
+        if (AntiFakeReport is null)
+            AntiFakeBannerText = "Click 'Run Genuine Spec Check' to verify your parts against Windows and BIOS firmware.";
+        if (!IsStressRunning && StressProgressPercent == 0)
+            StressStatusText = "Ready to run a 30-second battery drain stress test";
+        if (string.IsNullOrEmpty(StorageBenchResult))
+            StorageBenchResult = "Storage speed test has not been run yet";
+        if (Benchmark is null)
+            BenchmarkStatus = "Click 'Run Benchmark' to test CPU, RAM, and drive speed";
     }
 
     [RelayCommand]
@@ -175,6 +203,7 @@ public partial class HardwareHubViewModel : ObservableObject
 
         _stressCts = new CancellationTokenSource();
         IsStressRunning = true;
+        StressButtonText = _loc.Get("Battery.StressStop");
         StressProgressPercent = 0;
         try
         {
@@ -185,15 +214,16 @@ public partial class HardwareHubViewModel : ObservableObject
             });
             await _batteryService.RunStressTestAsync(30, progress, _stressCts.Token);
             await CheckBatteryAsync();
-            StressStatusText = "Hoàn thành Stress Test 30s";
+            StressStatusText = "Completed 30-second battery drain test";
         }
         catch (OperationCanceledException)
         {
-            StressStatusText = "Stress Test đã dừng";
+            StressStatusText = "Battery drain test stopped early";
         }
         finally
         {
             IsStressRunning = false;
+            StressButtonText = _loc.Get("Battery.StressStart");
             _stressCts.Dispose();
             _stressCts = null;
         }
@@ -203,7 +233,7 @@ public partial class HardwareHubViewModel : ObservableObject
     public async Task RunStorageSpeedTestAsync()
     {
         IsBusy = true;
-        StorageBenchResult = "Đang đo tốc độ đọc/ghi tuần tự 128 MB...";
+        StorageBenchResult = "Testing 128 MB sequential read and write speed...";
         try
         {
             var (read, write) = await _storageService.RunSpeedTestAsync(sizeMb: 128);

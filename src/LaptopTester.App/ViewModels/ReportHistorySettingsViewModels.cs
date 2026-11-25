@@ -18,9 +18,14 @@ public partial class ReportViewModel : ObservableObject
     private readonly LocalizationService _loc;
 
     [ObservableProperty] private int _score = 100;
+    [ObservableProperty] private VerdictBand _verdictBand = VerdictBand.Good;
     [ObservableProperty] private string _verdictText = "";
     [ObservableProperty] private string _notes = "";
     [ObservableProperty] private string _exportStatus = "";
+    [ObservableProperty] private string _titleText = "";
+    [ObservableProperty] private string _saveBtnText = "";
+    [ObservableProperty] private string _exportJsonBtnText = "";
+    [ObservableProperty] private string _exportHtmlBtnText = "";
 
     public ObservableCollection<TestResultEntry> Results => _store.Results;
     public ObservableCollection<ScoreDeduction> Deductions { get; } = new();
@@ -37,7 +42,18 @@ public partial class ReportViewModel : ObservableObject
         _hardwareService = hardwareService;
         _historyService = historyService;
         _loc = loc;
+        RefreshLabels();
         Refresh();
+    }
+
+    private void RefreshLabels()
+    {
+        TitleText = _loc.Get("Report.Title");
+        SaveBtnText = _loc.Get("Report.SaveSession");
+        ExportJsonBtnText = _loc.Get("Report.ExportJson");
+        ExportHtmlBtnText = _loc.Get("Report.ExportHtml");
+        if (string.IsNullOrEmpty(ExportStatus))
+            ExportStatus = "Review your overall score, add inspection notes, and export HTML/PDF or JSON reports";
     }
 
     [RelayCommand]
@@ -45,6 +61,7 @@ public partial class ReportViewModel : ObservableObject
     {
         var (score, verdict, deductions) = _engine.Evaluate(_store.Results);
         Score = score;
+        VerdictBand = verdict;
         VerdictText = verdict switch
         {
             VerdictBand.Good => _loc.Get("Verdict.Good"),
@@ -114,14 +131,27 @@ public partial class ReportViewModel : ObservableObject
 public partial class HistoryViewModel : ObservableObject
 {
     private readonly HistoryReportService _historyService;
+    private readonly LocalizationService _loc;
 
     [ObservableProperty] private QuickTestSession? _selectedSession;
     [ObservableProperty] private string _statusText = "";
+    [ObservableProperty] private string _titleText = "";
+    [ObservableProperty] private string _refreshBtnText = "";
+    [ObservableProperty] private string _clearBtnText = "";
     public ObservableCollection<QuickTestSession> Sessions { get; } = new();
 
-    public HistoryViewModel(HistoryReportService historyService)
+    public HistoryViewModel(HistoryReportService historyService, LocalizationService loc)
     {
         _historyService = historyService;
+        _loc = loc;
+        RefreshLabels();
+    }
+
+    private void RefreshLabels()
+    {
+        TitleText = _loc.Get("History.Title");
+        RefreshBtnText = _loc.Get("History.Refresh");
+        ClearBtnText = _loc.Get("History.Clear");
     }
 
     [RelayCommand]
@@ -156,24 +186,26 @@ public partial class SettingsViewModel : ObservableObject
     private readonly LocalizationService _loc;
     private readonly HistoryReportService _historyService;
 
-    [ObservableProperty] private bool _isVietnamese;
     [ObservableProperty] private string _privilegeText = "";
     [ObservableProperty] private string _historyFolder = "";
+    [ObservableProperty] private string _titleText = "";
+    [ObservableProperty] private string _privilegeHeader = "";
 
     public SettingsViewModel(LocalizationService loc, HistoryReportService historyService)
     {
         _loc = loc;
         _historyService = historyService;
-        _isVietnamese = loc.CurrentLanguage == AppLanguage.Vietnamese;
         PrivilegeText = HardwareService.IsCurrentProcessAdministrator()
-            ? "Administrator (Full ACPI / SMART access)"
-            : "Standard User (WMI / SMBIOS / Registry / USB / Audio active)";
+            ? "Administrator — Full hardware, drive health & motherboard sensor access enabled"
+            : "Standard User — Core checks work normally (run as Administrator to read CPU motherboard temperature sensors)";
         HistoryFolder = _historyService.HistoryDirectory;
+        RefreshLabels();
     }
 
-    partial void OnIsVietnameseChanged(bool value)
+    private void RefreshLabels()
     {
-        _loc.SetLanguage(value ? AppLanguage.Vietnamese : AppLanguage.English);
+        TitleText = _loc.Get("Settings.Title");
+        PrivilegeHeader = _loc.Get("Settings.Privilege");
     }
 
     [RelayCommand]

@@ -5,84 +5,193 @@
         <StackPanel>
             <!-- HUB GRID -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Hub}">
-                <TextBlock Text="Kiểm Tra Thiết Bị" Style="{StaticResource PageTitleStyle}"/>
-                <TextBlock Text="Kiểm tra các thiết bị ngoại vi, kết nối và phần cứng tương tác" Style="{StaticResource PageSubtitleStyle}" Margin="0,4,0,18"/>
+                <TextBlock Text="Device &amp; Peripheral Diagnostics" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="Test your keyboard, screen, touchpad, speakers, microphone, USB ports, Wi-Fi, webcam, charger, and build quality" Style="{StaticResource PageSubtitleStyle}" Margin="0,4,0,18"/>
 
                 <UniformGrid Columns="3">
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Keyboard" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Bàn Phím" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Test từng phím trực tiếp &amp; phát hiện kẹt phím" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Keyboard" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconKeyboard}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Keyboard" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Visual key tester to spot dead or stuck keys" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Display" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Màn Hình" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Full-screen màu thuần, điểm chết, gradient &amp; lưới" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Display" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconDisplay}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Display &amp; Pixels" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Full-screen colors, gradients &amp; grid for dead pixels" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Touchpad" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Touchpad &amp; Chuột" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Vẽ cảm ứng, đếm click trái/phải &amp; cuộn" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Touchpad" Style="{StaticResource TileButtonStyle}" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconTouchpad}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Touchpad &amp; Pointer" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Drawing area, left/right clicks &amp; scroll wheel test" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Audio" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Loa &amp; Microphone" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Test Stereo Trái/Phải, dải tần &amp; ghi âm mic" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Audio" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconSpeaker}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Speakers &amp; Mic" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Left/right speaker tones and microphone voice test" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="USB" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Cổng USB (Live Watcher)" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Liệt kê controller &amp; theo dõi cắm/rút thiết bị" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="USB" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconUsb}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="USB Ports (Live)" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Detects USB ports and live plug/unplug events" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Connectivity" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,12" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Wi-Fi + Bluetooth" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Quét mạng Wi-Fi xung quanh &amp; radio Bluetooth" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Connectivity" Style="{StaticResource TileButtonStyle}" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconWifi}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Wi-Fi + Bluetooth" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Scans nearby Wi-Fi networks &amp; Bluetooth radio" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Camera" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Webcam" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Kiểm tra nhận diện camera trên hệ thống" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Camera" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconCamera}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Webcam" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Checks if Windows sees your built-in camera" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Charger" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Sạc &amp; Nguồn AC" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Kiểm tra công suất sạc thực tế &amp; điện áp" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Charger" Style="{StaticResource TileButtonStyle}" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconPower}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="AC Charger &amp; Power" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Live charging wattage (Watts) &amp; battery voltage" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
-                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Physical" Style="{StaticResource SecondaryButtonStyle}" Padding="18" HorizontalContentAlignment="Left">
-                        <StackPanel>
-                            <TextBlock Text="Ngoại Hình &amp; Bản Lề" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Checklist kiểm tra vật lý &amp; quạt tản nhiệt" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" Margin="0,4,0,0"/>
-                        </StackPanel>
+
+                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="Physical" Style="{StaticResource TileButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+                                <Path Data="{StaticResource IconWrench}" Fill="{StaticResource AccentOrangeHoverBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="Chassis &amp; Hinges" FontSize="14.5" FontWeight="SemiBold"/>
+                                <TextBlock Text="Hinges, body, screws &amp; cooling fan noise check" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Fill="{StaticResource TextMutedBrush}" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"/>
+                        </Grid>
                     </Button>
                 </UniformGrid>
             </StackPanel>
 
             <!-- 1. KEYBOARD TEST -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Keyboard}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Bàn Phím" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="Keyboard Key Test" Style="{StaticResource PageTitleStyle}"/>
                         <TextBlock Text="{Binding LastKeyText}" Style="{StaticResource PageSubtitleStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="{Binding TestedKeyCount, StringFormat='{}Đã test: {0} phím'}" VerticalAlignment="Center" Margin="0,0,14,0" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenHoverBrush}"/>
-                        <Button Content="Đặt lại" Command="{Binding ResetKeyboardCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="keyboard|Keyboard Test|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Lỗi" Command="{Binding MarkDeviceResultCommand}" CommandParameter="keyboard|Keyboard Test|Input|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource AccentOrangeMutedBrush}" BorderBrush="{StaticResource AccentOrangeBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,10,0">
+                            <TextBlock Text="{Binding TestedKeyCount, StringFormat='{}Tested: {0} keys'}" FontFamily="{StaticResource MonoFontFamily}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}"/>
+                        </Border>
+                        <Button Content="Reset" Command="{Binding ResetKeyboardCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="keyboard|Keyboard Test|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="keyboard|Keyboard Test|Input|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
@@ -98,18 +207,22 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Width="{Binding Width}" Height="40" Margin="0,0,5,0" CornerRadius="6" BorderThickness="1"
-                                                    BorderBrush="{StaticResource BorderSubtleBrush}">
+                                            <Border Width="{Binding Width}" Height="40" Margin="0,0,5,0" CornerRadius="5" BorderThickness="1">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+                                                        <Setter Property="TextElement.Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsTested}" Value="True">
-                                                                <Setter Property="Background" Value="#163322"/>
-                                                                <Setter Property="BorderBrush" Value="#22C55E"/>
+                                                                <Setter Property="Background" Value="{StaticResource AccentOrangeMutedBrush}"/>
+                                                                <Setter Property="BorderBrush" Value="{StaticResource AccentOrangeBrush}"/>
+                                                                <Setter Property="TextElement.Foreground" Value="{StaticResource AccentOrangeTextBrush}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsPressed}" Value="True">
-                                                                <Setter Property="Background" Value="#1DB954"/>
+                                                                <Setter Property="Background" Value="{StaticResource AccentOrangeBrush}"/>
+                                                                <Setter Property="BorderBrush" Value="#FFA26B"/>
+                                                                <Setter Property="TextElement.Foreground" Value="#09090B"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -127,77 +240,81 @@
 
             <!-- 2. DISPLAY TEST -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Display}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Màn Hình" Style="{StaticResource PageTitleStyle}"/>
-                        <TextBlock Text="Nhấn vào từng chế độ để mở toàn màn hình (Space/Click chuyển màu · Esc thoát)" Style="{StaticResource PageSubtitleStyle}"/>
+                        <TextBlock Text="Display &amp; Dead Pixel Test" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="Click any pattern to enter fullscreen mode (Space/Click = Next · Right-Click = Prev · Esc = Exit)" Style="{StaticResource PageSubtitleStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="display|Display &amp; Dead Pixels|Display|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Lỗi" Command="{Binding MarkDeviceResultCommand}" CommandParameter="display|Display &amp; Dead Pixels|Display|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="display|Display &amp; Dead Pixels|Display|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="display|Display &amp; Dead Pixels|Display|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
                 <UniformGrid Columns="3" Margin="0,0,0,14">
-                    <Button Content="Test Điểm Chết (RGB / Trắng / Đen)" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Solid" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0" Padding="14"/>
-                    <Button Content="Test Dải Màu (Gradient)" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Gradient" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Padding="14"/>
-                    <Button Content="Test Lưới / Hình Học (Grid)" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Grid" Style="{StaticResource SecondaryButtonStyle}" Padding="14"/>
+                    <Button Content="Solid Colors (RGB / White / Black)" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Solid" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0" Padding="14"/>
+                    <Button Content="Gradient Ramp" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Gradient" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Padding="14"/>
+                    <Button Content="Pixel Alignment Grid" Command="{Binding LaunchDisplayTestCommand}" CommandParameter="Grid" Style="{StaticResource SecondaryButtonStyle}" Padding="14"/>
                 </UniformGrid>
 
                 <Border Style="{StaticResource CardBorderStyle}">
-                    <ItemsControl ItemsSource="{Binding Displays}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="Bold" FontSize="14">
-                                            <Run Text="{Binding PanelManufacturer, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding PanelModel, Mode=OneWay}"/>
-                                        </TextBlock>
-                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
-                                            <Run Text="{Binding WidthPx, Mode=OneWay}"/><Run Text=" x "/><Run Text="{Binding HeightPx, Mode=OneWay}"/>
-                                            <Run Text=" @ "/><Run Text="{Binding RefreshRateHz, Mode=OneWay}"/><Run Text=" Hz · "/>
-                                            <Run Text="{Binding AspectRatio, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding BitsPerPixel, Mode=OneWay}"/><Run Text="-bit"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <StackPanel>
+                        <TextBlock Text="CONNECTED SCREENS (EDID PANEL INFO)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding Displays}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold" FontSize="14">
+                                                <Run Text="{Binding PanelManufacturer, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding PanelModel, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource MonoDataStyle}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
+                                                <Run Text="{Binding WidthPx, Mode=OneWay}"/><Run Text=" x "/><Run Text="{Binding HeightPx, Mode=OneWay}"/>
+                                                <Run Text=" @ "/><Run Text="{Binding RefreshRateHz, Mode=OneWay}"/><Run Text=" Hz · "/>
+                                                <Run Text="{Binding AspectRatio, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding BitsPerPixel, Mode=OneWay}"/><Run Text="-bit"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </Border>
             </StackPanel>
 
             <!-- 3. TOUCHPAD TEST -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Touchpad}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Touchpad &amp; Chuột" Style="{StaticResource PageTitleStyle}"/>
-                        <TextBlock Text="Di chuyển, vẽ lên vùng cảm ứng, thử chuột trái/phải/giữa và cuộn" Style="{StaticResource PageSubtitleStyle}"/>
+                        <TextBlock Text="Touchpad &amp; Pointer Test" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="Draw across the entire surface to check dead zones, clicks, and scroll wheel" Style="{StaticResource PageSubtitleStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Xóa vùng vẽ" Click="OnClearTouchpadClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="touchpad|Touchpad &amp; Pointer|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Clear Canvas" Click="OnClearTouchpadClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="touchpad|Touchpad &amp; Pointer|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="touchpad|Touchpad &amp; Pointer|Input|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
                 <UniformGrid Columns="4" Margin="0,0,0,12">
-                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding LeftClicks, StringFormat='{}Left Click: {0}'}" FontWeight="SemiBold"/></Border>
-                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding RightClicks, StringFormat='{}Right Click: {0}'}" FontWeight="SemiBold"/></Border>
-                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding MiddleClicks, StringFormat='{}Middle Click: {0}'}" FontWeight="SemiBold"/></Border>
-                    <Border Style="{StaticResource SubCardBorderStyle}"><TextBlock Text="{Binding WheelEvents, StringFormat='{}Scroll Events: {0}'}" FontWeight="SemiBold"/></Border>
+                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding LeftClicks, StringFormat='{}Left Click: {0}'}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold"/></Border>
+                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding RightClicks, StringFormat='{}Right Click: {0}'}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold"/></Border>
+                    <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,8,0"><TextBlock Text="{Binding MiddleClicks, StringFormat='{}Middle Click: {0}'}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold"/></Border>
+                    <Border Style="{StaticResource SubCardBorderStyle}"><TextBlock Text="{Binding WheelEvents, StringFormat='{}Scroll Events: {0}'}" Style="{StaticResource MonoDataStyle}" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}"/></Border>
                 </UniformGrid>
 
-                <Border Style="{StaticResource CardBorderStyle}" Height="320" Padding="0" ClipToBounds="True">
-                    <InkCanvas x:Name="TouchpadCanvas" Background="#141414"
+                <Border Style="{StaticResource CardBorderStyle}" Height="340" Padding="0" ClipToBounds="True">
+                    <InkCanvas x:Name="TouchpadCanvas" Background="#07070A"
                                PreviewMouseDown="OnTouchpadMouseDown"
                                PreviewMouseWheel="OnTouchpadMouseWheel"/>
                 </Border>
@@ -205,16 +322,16 @@
 
             <!-- 4. AUDIO (SPEAKER & MICROPHONE) -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Audio}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Loa &amp; Microphone" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="Speakers &amp; Microphone Test" Style="{StaticResource PageTitleStyle}"/>
                         <TextBlock Text="{Binding AudioSummary}" Style="{StaticResource PageSubtitleStyle}"/>
                     </StackPanel>
-                    <Button Grid.Column="1" Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button Grid.Column="1" Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
                 </Grid>
 
                 <Grid>
@@ -226,32 +343,32 @@
 
                     <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="LOA STEREO (WAVE SYNTHESIS)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
-                            <UniformGrid Columns="2" Margin="0,0,0,12">
-                                <Button Content="Phát Loa Trái (Left)" Command="{Binding PlayLeftSpeakerCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
-                                <Button Content="Phát Loa Phải (Right)" Command="{Binding PlayRightSpeakerCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"/>
-                                <Button Content="Phát Cả 2 Loa (Both)" Command="{Binding PlayBothSpeakersCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                                <Button Content="Quét tần số (Sweep)" Command="{Binding PlaySweepCommand}" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <TextBlock Text="STEREO SPEAKERS (LEFT &amp; RIGHT SOUND TEST)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
+                            <UniformGrid Columns="2" Margin="0,0,0,14">
+                                <Button Content="Play Left (440 Hz)" Command="{Binding PlayLeftSpeakerCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
+                                <Button Content="Play Right (523 Hz)" Command="{Binding PlayRightSpeakerCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"/>
+                                <Button Content="Play Both Channels" Command="{Binding PlayBothSpeakersCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="Tone Sweep (160–4000 Hz)" Command="{Binding PlaySweepCommand}" Style="{StaticResource SecondaryButtonStyle}"/>
                             </UniformGrid>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Dừng phát" Command="{Binding StopAudioCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                                <Button Content="Loa Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="speaker|Stereo Speakers|Audio|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                                <Button Content="Loa Lỗi" Command="{Binding MarkDeviceResultCommand}" CommandParameter="speaker|Stereo Speakers|Audio|Fail" Style="{StaticResource DangerButtonStyle}"/>
+                                <Button Content="Stop Audio" Command="{Binding StopAudioCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="Speaker Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="speaker|Stereo Speakers|Audio|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="Speaker Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="speaker|Stereo Speakers|Audio|Fail" Style="{StaticResource DangerButtonStyle}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
                     <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="MICROPHONE (LIVE PCM)" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
-                            <ProgressBar Value="{Binding MicLevelPercent}" Maximum="100" Height="14" Background="{StaticResource BgSurfaceBrush}" Foreground="{StaticResource AccentGreenHoverBrush}" Margin="0,0,0,12"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <Button Content="Bắt đầu / Dừng Ghi Âm" Command="{Binding ToggleMicRecordingCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                                <Button Content="Nghe lại" Command="{Binding PlayRecordedMicCommand}" IsEnabled="{Binding HasRecordedAudio}" Style="{StaticResource SecondaryButtonStyle}"/>
+                            <TextBlock Text="MICROPHONE RECORDING &amp; PLAYBACK" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,12"/>
+                            <ProgressBar Value="{Binding MicLevelPercent}" Maximum="100" Style="{StaticResource OrangeProgressBarStyle}" Height="12" Margin="0,0,0,14"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <Button Content="{Binding MicButtonText}" Command="{Binding ToggleMicRecordingCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="Play Recording" Command="{Binding PlayRecordedMicCommand}" IsEnabled="{Binding HasRecordedAudio}" Style="{StaticResource SecondaryButtonStyle}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Mic Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="microphone|Microphone Recording|Audio|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                                <Button Content="Mic Lỗi" Command="{Binding MarkDeviceResultCommand}" CommandParameter="microphone|Microphone Recording|Audio|Fail" Style="{StaticResource DangerButtonStyle}"/>
+                                <Button Content="Mic Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="microphone|Microphone Recording|Audio|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="Mic Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="microphone|Microphone Recording|Audio|Fail" Style="{StaticResource DangerButtonStyle}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -260,29 +377,32 @@
 
             <!-- 5. USB PORTS & LIVE WATCHER -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=USB}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Cổng USB" Style="{StaticResource PageTitleStyle}"/>
-                        <TextBlock Text="{Binding UsbWatcherLog}" Style="{StaticResource PageSubtitleStyle}"/>
+                        <TextBlock Text="USB Ports (Live Plug-in Check)" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="{Binding UsbWatcherLog}" Style="{StaticResource PageSubtitleStyle}" Foreground="{StaticResource AccentOrangeTextBrush}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Quét lại USB" Command="{Binding ScanUsbAsyncCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Rescan USB" Command="{Binding ScanUsbCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
                 <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
                     <StackPanel>
-                        <TextBlock Text="USB CONTROLLERS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                        <TextBlock Text="USB HOST CONTROLLERS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding UsbControllers}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Style="{StaticResource SubCardBorderStyle}" Margin="0,0,0,6">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                        <Grid>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Status}" HorizontalAlignment="Right" Foreground="{StaticResource StatusPassBrush}" FontWeight="SemiBold"/>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -292,7 +412,7 @@
 
                 <Border Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
-                        <TextBlock Text="THIẾT BỊ USB ĐANG KẾT NỐI" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                        <TextBlock Text="CONNECTED USB DEVICES" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding UsbDevices}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -300,10 +420,12 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="90"/>
                                                 <ColumnDefinition Width="160"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding SpeedLabel}" Foreground="{StaticResource AccentGreenHoverBrush}" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding PortType}" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding SpeedLabel}" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -315,24 +437,24 @@
 
             <!-- 6. WI-FI + BLUETOOTH -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Connectivity}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Kiểm Tra Wi-Fi &amp; Bluetooth" Style="{StaticResource PageTitleStyle}"/>
+                        <TextBlock Text="Wi-Fi &amp; Bluetooth Check" Style="{StaticResource PageTitleStyle}"/>
                         <TextBlock Text="{Binding BluetoothSummary, StringFormat='{}Bluetooth: {0}'}" Style="{StaticResource PageSubtitleStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Quét lại" Command="{Binding ScanConnectivityAsyncCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Rescan Wireless" Command="{Binding ScanConnectivityCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
                 <Border Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
-                        <TextBlock Text="MẠNG WI-FI PHÁT HIỆN" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
+                        <TextBlock Text="NEARBY WI-FI NETWORKS" Style="{StaticResource SectionEyebrowStyle}" Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding WifiNetworks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -340,12 +462,14 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="140"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="70"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Ssid}" FontWeight="SemiBold"/>
                                             <TextBlock Grid.Column="1" Text="{Binding PhyType}" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding SignalPercent, StringFormat='{}{0}%'}" Foreground="{StaticResource AccentGreenHoverBrush}" HorizontalAlignment="Right" FontWeight="Bold"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Security}" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding SignalPercent, StringFormat='{}{0}%'}" FontFamily="{StaticResource MonoFontFamily}" Foreground="{StaticResource AccentOrangeTextBrush}" HorizontalAlignment="Right" FontWeight="Bold"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -357,16 +481,17 @@
 
             <!-- 7. CAMERA -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Camera}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Kiểm Tra Webcam" Style="{StaticResource PageTitleStyle}"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Quét Camera" Command="{Binding ScanCamerasAsyncCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Đạt" Command="{Binding MarkDeviceResultCommand}" CommandParameter="camera|Webcam Check|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <TextBlock Text="Webcam Check" Style="{StaticResource PageTitleStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Scan Cameras" Command="{Binding ScanCamerasCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Pass" Command="{Binding MarkDeviceResultCommand}" CommandParameter="camera|Webcam Check|Input|Pass" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Fail" Command="{Binding MarkDeviceResultCommand}" CommandParameter="camera|Webcam Check|Input|Fail" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
                 <Border Style="{StaticResource CardBorderStyle}">
@@ -384,37 +509,37 @@
 
             <!-- 8. CHARGER -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Charger}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Kiểm Tra Sạc &amp; Nguồn AC" Style="{StaticResource PageTitleStyle}"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Đọc lại nguồn" Command="{Binding CheckChargerAsyncCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <TextBlock Text="Charger &amp; Power Status" Style="{StaticResource PageTitleStyle}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Refresh Power" Command="{Binding CheckChargerCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
                     </StackPanel>
                 </Grid>
                 <Border Style="{StaticResource CardBorderStyle}">
-                    <TextBlock Text="{Binding ChargerSummary}" FontSize="15" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ChargerSummary}" Style="{StaticResource MonoDataStyle}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource AccentOrangeTextBrush}" TextWrapping="Wrap"/>
                 </Border>
             </StackPanel>
 
             <!-- 9. PHYSICAL INSPECTION -->
             <StackPanel Visibility="{Binding ActiveSection, Converter={StaticResource EqVis}, ConverterParameter=Physical}">
-                <Grid Margin="0,0,0,14">
+                <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Kiểm Tra Ngoại Hình &amp; Bản Lề" Style="{StaticResource PageTitleStyle}"/>
-                    <Button Grid.Column="1" Content="Về Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <TextBlock Text="Physical Body, Hinges &amp; Fan Checklist" Style="{StaticResource PageTitleStyle}"/>
+                    <Button Grid.Column="1" Content="Back to Hub" Command="{Binding SelectSectionCommand}" CommandParameter="Hub" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
                 </Grid>
                 <Border Style="{StaticResource CardBorderStyle}">
                     <ItemsControl ItemsSource="{Binding PhysicalChecklist}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,0,10"/>
+                                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Style="{StaticResource DarkCheckBoxStyle}" Margin="0,0,0,12"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

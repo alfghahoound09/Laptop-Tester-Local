@@ -57,37 +57,10 @@ public sealed class StorageHealthService
             int msftMedia = msftRow is not null ? WmiQueryHelper.Int(msftRow, "MediaType") : 0;
             int healthCode = msftRow is not null ? WmiQueryHelper.Int(msftRow, "HealthStatus") : -1;
 
-            bool isExternal = busType == 7 // USB
-                || wmiIface.Equals("USB", StringComparison.OrdinalIgnoreCase)
-                || wmiMedia.Contains("External", StringComparison.OrdinalIgnoreCase);
-
-            string ifaceLabel = busType switch
-            {
-                17 => "NVMe",
-                11 => "SATA",
-                7 => "USB",
-                8 => "RAID",
-                3 => "ATA",
-                _ => model.Contains("NVMe", StringComparison.OrdinalIgnoreCase) ? "NVMe" : wmiIface
-            };
-
-            string mediaCategory = msftMedia switch
-            {
-                4 => "SSD",
-                3 => "HDD",
-                5 => "SCM",
-                _ => busType == 17 || model.Contains("NVMe", StringComparison.OrdinalIgnoreCase) || model.Contains("SSD", StringComparison.OrdinalIgnoreCase)
-                    ? "SSD"
-                    : "HDD / Fixed"
-            };
-
-            string healthStatus = healthCode switch
-            {
-                0 => "Healthy",
-                1 => "Warning",
-                2 => "Unhealthy",
-                _ => "OK (WMI)"
-            };
+            bool isExternal = IsExternalDrive(busType, wmiIface, wmiMedia);
+            string ifaceLabel = MapBusType(busType, model, wmiIface);
+            string mediaCategory = MapMediaCategory(msftMedia, busType, model);
+            string healthStatus = MapHealthStatus(healthCode);
 
             int? tempC = relRow is not null && WmiQueryHelper.Int(relRow, "Temperature") is > 0 and < 150
                 ? WmiQueryHelper.Int(relRow, "Temperature")
@@ -125,6 +98,39 @@ public sealed class StorageHealthService
 
         return drives;
     }
+
+    internal static bool IsExternalDrive(int busType, string wmiIface, string wmiMedia) =>
+        busType == 7
+        || wmiIface.Equals("USB", StringComparison.OrdinalIgnoreCase)
+        || wmiMedia.Contains("External", StringComparison.OrdinalIgnoreCase);
+
+    internal static string MapBusType(int busType, string model, string wmiIface) => busType switch
+    {
+        17 => "NVMe",
+        11 => "SATA",
+        7 => "USB",
+        8 => "RAID",
+        3 => "ATA",
+        _ => model.Contains("NVMe", StringComparison.OrdinalIgnoreCase) ? "NVMe" : wmiIface
+    };
+
+    internal static string MapMediaCategory(int msftMedia, int busType, string model) => msftMedia switch
+    {
+        4 => "SSD",
+        3 => "HDD",
+        5 => "SCM",
+        _ => busType == 17 || model.Contains("NVMe", StringComparison.OrdinalIgnoreCase) || model.Contains("SSD", StringComparison.OrdinalIgnoreCase)
+            ? "SSD"
+            : "HDD / Fixed"
+    };
+
+    internal static string MapHealthStatus(int healthCode) => healthCode switch
+    {
+        0 => "Healthy",
+        1 => "Warning",
+        2 => "Unhealthy",
+        _ => "OK (WMI)"
+    };
 
     /// <summary>Measures sequential write and read throughput on the target drive root (default %TEMP%).</summary>
     public async Task<(double ReadMbPerSec, double WriteMbPerSec)> RunSpeedTestAsync(
